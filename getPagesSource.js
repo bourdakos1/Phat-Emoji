@@ -226,7 +226,7 @@ var observer = new MutationObserver(function(mutations, observer) {
             var parsed = JSON.stringify( {"iv":iv,"v":v,"iter":iter,"ks":ks,"ts":ts,"mode":mode,"adata":adata,"cipher":cipher,"salt":salt,"ct":ct});
             try {
                 var decrypted = sjcl.decrypt("password", parsed);
-                encrypt[i].innerText = '🔑: ' + decrypted;
+                encrypt[i].innerText = '🔑  ' + decrypted;
             } catch (e) {
                 console.error('failed to parse: ' + parsed);
             }
