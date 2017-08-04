@@ -9,16 +9,46 @@ value "popup.html".
         <title>Getting Started Extension's Popup</title>
         <style>
         body {
-            font-family: "Segoe UI", "Lucida Grande", Tahoma, sans-serif;
-            font-size: 100%;
-            width: 400px;
-            height: 225px;
+            font-family: SFUIText-Regular, "Segoe UI", "Helvetica Neue", Helvetica, Arial, sans-serif;
+            font-size: 14px;
+            text-rendering: optimizeLegibility;
+            -webkit-font-smoothing: antialiased;
         }
-        div {
-            /* avoid an excessively wide status text */
-            white-space: pre;
-            text-overflow: ellipsis;
-            overflow: hidden;
+        *:focus {
+            outline: none;
+        }
+        .text-box {
+            height: 100%;
+            margin: 0;
+            padding: 17px 51px 15px 13px;
+            border: none;
+            background-color: transparent;
+            letter-spacing: -0.02em;
+            line-height: 17.92px;
+            color: #1d2129;
+        }
+        .box {
+            max-height: 162px;
+            min-height: 48px;
+            overflow: scroll;
+            width: 420px;
+            border: 1px solid #e5e5e5;
+        }
+        [contentEditable=true]:empty:before {
+            content: attr(data-ph);
+            color: #cacaca;
+        }
+        #send_emoji {
+            cursor: pointer;
+            position: fixed;
+            background-color: transparent;
+            border: none;
+            bottom: 17px;
+            right: 17px;
+            padding: 3px;
+        }
+        #send_emoji:active {
+            opacity: .6;
         }
         </style>
 
@@ -31,6 +61,9 @@ value "popup.html".
     <script src="popup.js"></script>
     </head>
     <body>
-        <button id="send_emoji"><img src="http://i.imgur.com/V5zsy2i.png" style="width: 100px; height: 100px;"></button>
+        <div class="box">
+            <div contenteditable="true" data-ph="Type a message..." class="text-box" id="message"></div>
+            <button id="send_emoji"><img src="http://i.imgur.com/V5zsy2i.png" style="width: 24px; height: 24px;"></button>
+        <div>
     </body>
 </html>
