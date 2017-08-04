@@ -8,7 +8,8 @@
     "content_scripts": [
         {
             "matches": [
-                "*://*.messenger.com/*"
+                "*://*.messenger.com/*",
+                "*://*.facebook.com/messages/*"
             ],
             "js": [
                 "getPagesSource.js"
