@@ -1,6 +1,11 @@
 document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('send_emoji').addEventListener('click', function() {
         var message = document.getElementById('message').innerText;
+        if (message == '') {
+            return;
+        }
+        document.getElementById('message').innerText = '';
+        document.getElementById('message').focus();
         chrome.tabs.executeScript(null, {
             code: 'sendMessage("' + message + '")'
         }, function() {
