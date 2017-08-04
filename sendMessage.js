@@ -214,7 +214,7 @@ var iv = messageJSON.iv;
 var salt = messageJSON.salt;
 var ct = messageJSON.ct;
 
-message = '<encrypted>' + iv + ':' + salt + ':' + ct +  '</encrypted>';
+message = iv + ':' + salt + ':' + ct;
 
 // We should now be able to make a call.
 var data = new FormData();

@@ -79,19 +79,18 @@ var observer = new MutationObserver(function(mutations, observer) {
 
     var encrypt = document.getElementsByClassName("_3oh- _58nk");
     for (var i = 0; i < encrypt.length; i++) {
-        var encrypts = encrypt[i].innerText.match( /<encrypted>(.*?)<\/encrypted>/ );
-        if (encrypts != null && encrypts.length >= 2) {
-            var parsed = encrypts[1].split(':');
-            var iv = parsed[0];
-            var salt = parsed[1];
-            var ct = parsed[2];
+        var encrypts = encrypt[i].innerText.split(':');
+        if (encrypts != null && encrypts.length == 3) {
+            var iv = encrypts[0];
+            var salt = encrypts[1];
+            var ct = encrypts[2];
 
-            console.log('parsing: ' + parsed);
+            console.log('parsing: ' + encrypts);
 
-            parsed = JSON.stringify( {"iv":iv,"v":v,"iter":iter,"ks":ks,"ts":ts,"mode":mode,"adata":adata,"cipher":cipher,"salt":salt,"ct":ct});
+            var parsed = JSON.stringify( {"iv":iv,"v":v,"iter":iter,"ks":ks,"ts":ts,"mode":mode,"adata":adata,"cipher":cipher,"salt":salt,"ct":ct});
             try {
                 var decrypted = sjcl.decrypt("password", parsed);
-                encrypt[i].innerText = decrypted;
+                encrypt[i].innerText = '🔑: ' + decrypted;
             } catch (e) {
                 console.error('failed to parse: ' + parsed);
             }
