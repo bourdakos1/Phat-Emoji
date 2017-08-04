@@ -133,10 +133,7 @@ with({$: BigNumber, o: BigNumber.prototype}){
         return delete this._rounding, this;
     };
 }
-// chrome.runtime.sendMessage({
-//     action: "getSource",
-//     source: document.getElementsByTagName("script")[4].innerText
-// });
+
 
 var millis = new Date().getTime()
 var big = new BigNumber(millis).multiply(2**22).add(Math.floor(Math.random() * 2**22))
@@ -146,10 +143,26 @@ var person = document.getElementsByTagName("script")[4].innerText.match( /{"toke
 
 var otherUser = document.querySelector("ul li[aria-relevant='additions text']").children[0].id.split(':')[1];
 
-// // We should now be able to make a call.
+
+run = function() {
+    window.setInterval(function(){
+        var errors = document.getElementsByClassName("_1o13");
+        for (var i = 0; i < errors.length; i++) {
+            var node = errors[i].parentNode.parentNode
+            console.log(node);
+            node.innerHTML = '<div aria-label="🍆" class="_2poz _ui9 _383m" tabindex="0"><img class="_19_s _1ift img" src="http://i.imgur.com/V5zsy2i.png" alt=""></div>'
+            console.log(node);
+            run();
+        }
+    }, 1000);
+}
+
+run();
+
+// We should now be able to make a call.
 var data = new FormData();
 data.append('action_type', 'ma-type:user-generated-message');
-data.append('body', '🍆');
+data.append('body', '🤔');
 data.append('has_attachment', 'false');
 data.append('message_id', big._d.join(''));
 data.append('offline_threading_id', big._d.join(''));
