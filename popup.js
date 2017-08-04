@@ -1,7 +1,8 @@
 document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('send_emoji').addEventListener('click', function() {
+        var message = document.getElementById('message').innerText;
         chrome.tabs.executeScript(null, {
-            code: "sendMessage('poop')"
+            code: 'sendMessage("' + message + '")'
         }, function() {
             // If you try and inject into an extensions page or the webstore/NTP you'll get an error
             if (chrome.runtime.lastError) {
