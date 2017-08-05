@@ -226,7 +226,8 @@ var observer = new MutationObserver(function(mutations, observer) {
             var parsed = JSON.stringify( {"iv":iv,"v":v,"iter":iter,"ks":ks,"ts":ts,"mode":mode,"adata":adata,"cipher":cipher,"salt":salt,"ct":ct});
             try {
                 var decrypted = sjcl.decrypt("password", parsed);
-                encrypt[i].innerText = '🔑  ' + decrypted;
+                // encrypt[i].innerText = '' + decrypted;
+                encrypt[i].innerHTML = '<div style="display: flex;"><div style="flex: 0">🔑&nbsp;&nbsp;</div><div style="flex: 0">' + decrypted + '</div>';
             } catch (e) {
                 console.error('failed to parse: ' + parsed);
             }
@@ -250,8 +251,9 @@ function sendMessage(myMessage) {
 
     var otherUser = document.querySelector("ul li[aria-relevant='additions text']").children[0].id.split(':')[1];
 
+    myMessage = myMessage.split('<br/>').join('\n')
 
-    var message = sjcl.encrypt("password", myMessage);
+    var message = sjcl.encrypt("password", myMessage)
 
     var messageJSON = JSON.parse(message);
 
