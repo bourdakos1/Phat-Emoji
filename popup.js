@@ -11,7 +11,13 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     document.getElementById('send_emoji').addEventListener('click', function() {
-        validate();
+        var message = document.getElementById('message');
+        var messageText = message.innerText
+
+        chrome.tabs.query({currentWindow: true, active: true}, function(tabArray) {
+            chrome.tabs.sendMessage(tabArray[0].id, { action: "sendHotEmoji" });
+        });
+        message.focus();
     });
 });
 
@@ -24,13 +30,7 @@ function validate() {
     message.innerText = '';
     message.focus();
 
-    console.log(messageText)
-    chrome.tabs.executeScript(null, {
-        code: 'sendMessage("' + messageText.replace(/(?:\r\n|\r|\n)/g, '<br/>') + '")'
-    }, function() {
-        // If you try and inject into an extensions page or the webstore/NTP you'll get an error
-        if (chrome.runtime.lastError) {
-            // tokenView.innerText = 'There was an error injecting script : \n' + chrome.runtime.lastError.message;
-        }
+    chrome.tabs.query({currentWindow: true, active: true}, function(tabArray) {
+        chrome.tabs.sendMessage(tabArray[0].id, { action: "sendMessage", message: messageText });
     });
 }

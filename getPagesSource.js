@@ -226,7 +226,6 @@ var observer = new MutationObserver(function(mutations, observer) {
             var parsed = JSON.stringify( {"iv":iv,"v":v,"iter":iter,"ks":ks,"ts":ts,"mode":mode,"adata":adata,"cipher":cipher,"salt":salt,"ct":ct});
             try {
                 var decrypted = sjcl.decrypt("password", parsed);
-                // encrypt[i].innerText = '' + decrypted;
                 encrypt[i].innerHTML = '<div style="display: flex;"><div style="flex: 0">🔑&nbsp;&nbsp;</div><div style="flex: 1">' + decrypted + '</div>';
             } catch (e) {
                 console.error('failed to parse: ' + parsed);
@@ -238,46 +237,81 @@ var observer = new MutationObserver(function(mutations, observer) {
 // define what element should be observed by the observer
 // and what types of mutations trigger the callback
 observer.observe(document, {
-  subtree: true,
-  attributes: true
+    subtree: true,
+    attributes: true
 });
 
-function sendMessage(myMessage) {
-    var millis = new Date().getTime()
-    var big = new BigNumber(millis).multiply(2**22).add(Math.floor(Math.random() * 2**22))
+chrome.runtime.onMessage.addListener(function(message, sender, sendResponse) {
+    if (message.action == "sendMessage") {
+        var millis = new Date().getTime()
+        var big = new BigNumber(millis).multiply(2**22).add(Math.floor(Math.random() * 2**22))
 
-    var token = document.getElementsByTagName("script")[4].innerText.match( /{"token":"(.*?)"}/ )[1];
-    var person = document.getElementsByTagName("script")[4].innerText.match( /{"token":"(.*?)"}/ )[1];
+        var token = document.getElementsByTagName("script")[4].innerText.match( /{"token":"(.*?)"}/ )[1];
+        var person = document.getElementsByTagName("script")[4].innerText.match( /{"token":"(.*?)"}/ )[1];
 
-    var otherUser = document.querySelector("ul li[aria-relevant='additions text']").children[0].id.split(':')[1];
+        var otherUser = document.querySelector("ul li[aria-relevant='additions text']").children[0].id.split(':')[1];
 
-    myMessage = myMessage.split('<br/>').join('\n')
+        var messengerViewDom = document.getElementsByClassName('_1q5-')[0];
+        for (key in messengerViewDom) {
+            console.log(key);
 
-    var message = sjcl.encrypt("password", myMessage)
+            if (key.startsWith("__reactInternalInstance$")) {
+                console.log(messengerViewDom[key]);
+                otherId = messengerViewDom[key]["memoizedProps"]["children"][0]["_owner"]["memoizedProps"]["activeThreadID"].split(":")[1];
+                console.log(otherId);
+            }
+        }
 
-    var messageJSON = JSON.parse(message);
+        var message = sjcl.encrypt("password", message.message)
 
-    var iv = messageJSON.iv;
-    var salt = messageJSON.salt;
-    var ct = messageJSON.ct;
+        var messageJSON = JSON.parse(message);
 
-    message = iv + ':' + salt + ':' + ct;
+        var iv = messageJSON.iv;
+        var salt = messageJSON.salt;
+        var ct = messageJSON.ct;
 
-    // We should now be able to make a call.
-    var data = new FormData();
-    data.append('action_type', 'ma-type:user-generated-message');
-    data.append('body', message);
-    data.append('has_attachment', 'false');
-    data.append('message_id', big._d.join(''));
-    data.append('offline_threading_id', big._d.join(''));
-    data.append('other_user_fbid', otherUser);
-    data.append('source', 'source:messenger:web');
-    // data.append('tags[0]', 'hot_emoji_size:large');
-    // data.append('tags[1]', 'hot_emoji_source:hot_like');
-    data.append('timestamp', millis);
-    data.append('fb_dtsg', token);
+        message = iv + ':' + salt + ':' + ct;
 
-    var xhr = new XMLHttpRequest();
-    xhr.open('POST', 'https://www.messenger.com/messaging/send/', true);
-    xhr.send(data);
-}
+        // We should now be able to make a call.
+        var data = new FormData();
+        data.append('action_type', 'ma-type:user-generated-message');
+        data.append('body', message);
+        data.append('has_attachment', 'false');
+        data.append('message_id', big._d.join(''));
+        data.append('offline_threading_id', big._d.join(''));
+        data.append('other_user_fbid', otherUser);
+        data.append('source', 'source:messenger:web');
+        data.append('timestamp', millis);
+        data.append('fb_dtsg', token);
+
+        var xhr = new XMLHttpRequest();
+        xhr.open('POST', 'https://www.messenger.com/messaging/send/', true);
+        xhr.send(data);
+    } else if (message.action == "sendHotEmoji") {
+        var millis = new Date().getTime()
+        var big = new BigNumber(millis).multiply(2**22).add(Math.floor(Math.random() * 2**22))
+
+        var token = document.getElementsByTagName("script")[4].innerText.match( /{"token":"(.*?)"}/ )[1];
+        var person = document.getElementsByTagName("script")[4].innerText.match( /{"token":"(.*?)"}/ )[1];
+
+        var otherUser = document.querySelector("ul li[aria-relevant='additions text']").children[0].id.split(':')[1];
+
+        // We should now be able to make a call.
+        var data = new FormData();
+        data.append('action_type', 'ma-type:user-generated-message');
+        data.append('body', '🤔');
+        data.append('has_attachment', 'false');
+        data.append('message_id', big._d.join(''));
+        data.append('offline_threading_id', big._d.join(''));
+        data.append('other_user_fbid', otherUser);
+        data.append('source', 'source:messenger:web');
+        data.append('tags[0]', 'hot_emoji_size:large');
+        data.append('tags[1]', 'hot_emoji_source:hot_like');
+        data.append('timestamp', millis);
+        data.append('fb_dtsg', token);
+
+        var xhr = new XMLHttpRequest();
+        xhr.open('POST', 'https://www.messenger.com/messaging/send/', true);
+        xhr.send(data);
+    }
+});
