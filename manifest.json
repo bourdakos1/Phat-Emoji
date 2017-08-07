@@ -9,7 +9,7 @@
         {
             "matches": [
                 "*://*.messenger.com/*",
-                "*://*.facebook.com/messages/*"
+                "*://*.facebook.com/*"
             ],
             "js": [
                 "decrypt.js"
@@ -31,6 +31,7 @@
     "permissions": [
         "declarativeContent",
         "activeTab",
-        "*://*.messenger.com/"
+        "*://*.messenger.com/",
+        "*://*.facebook.com/*"
     ]
 }

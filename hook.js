@@ -195,72 +195,116 @@ null!=d[3]?b[d[2]]=parseInt(d[3],10):null!=d[4]?b[d[2]]=d[2].match(/^(ct|adata|s
 b){var c={},d;for(d=0;d<b.length;d++)void 0!==a[b[d]]&&(c[b[d]]=a[b[d]]);return c}};sjcl.encrypt=sjcl.json.encrypt;sjcl.decrypt=sjcl.json.decrypt;sjcl.misc.pa={};sjcl.misc.cachedPbkdf2=function(a,b){var c=sjcl.misc.pa,d;b=b||{};d=b.iter||1E3;c=c[a]=c[a]||{};d=c[d]=c[d]||{firstSalt:b.salt&&b.salt.length?b.salt.slice(0):sjcl.random.randomWords(2,0)};c=void 0===b.salt?d.firstSalt:b.salt;d[c]=d[c]||sjcl.misc.pbkdf2(a,c,b.iter);return{key:d[c].slice(0),salt:c.slice(0)}};
 "undefined"!==typeof module&&module.exports&&(module.exports=sjcl);"function"===typeof define&&define([],function(){return sjcl});
 
+childPropLoop = function(obj) {
+    for (let childIndex in obj) {
+        let child = obj[childIndex]
+
+        if (child != null) {
+            if (child['props'] != null) {
+                if ('activeThreadID' in child['props']) {
+                    let id = child['props']['activeThreadID']
+                    return id;
+                }
+
+                if ('children' in child['props']) {
+                    let children = child['props']['children']
+                    let id = childPropLoop(children)
+                    if (id != null) {
+                        return id;
+                    }
+                }
+            }
+        }
+    }
+}
+
+loopy = function(node) {
+    for (let key in node) {
+    	if (key.startsWith("__reactInternalInstance$")) {
+            let instance = node[key]
+            if (instance['memoizedState'] == null) {
+                for (let childIndex in instance['memoizedProps']['children']) {
+                    let children = instance['memoizedProps']['children'][childIndex]['props']['children']
+                    let id = childPropLoop(children)
+                    if (id != null) {
+                        return id;
+                    }
+                }
+            }
+            return instance
+    	}
+    }
+    for (let child in node.children) {
+        let id = loopy(node.children[child])
+        if (id != null) {
+            return id;
+        }
+    }
+}
 
 window.addEventListener('message', event => {
     if (event.source !== window || event.data.action == null) {
         return;
     }
 
-    var messengerViewDom = document.getElementsByClassName('_1q5-')[0];
+    let node = document.body;
+    let otherUser = loopy(node).split(':')[1];
+    console.log(otherUser);
 
-    for (let key in messengerViewDom) {
-        if (key.startsWith("__reactInternalInstance$")) {
-            var otherUser = messengerViewDom[key]["memoizedProps"]["children"][0]["_owner"]["memoizedProps"]["activeThreadID"].split(":")[1];
-            console.log(otherUser)
+    var millis = new Date().getTime()
+    var big = new BigNumber(millis).multiply(2**22).add(Math.floor(Math.random() * 2**22))
 
-            var millis = new Date().getTime()
-            var big = new BigNumber(millis).multiply(2**22).add(Math.floor(Math.random() * 2**22))
+    var token = document.getElementsByTagName("script")[4].innerText.match( /{"token":"(.*?)"}/ )[1];
+    var person = document.getElementsByTagName("script")[4].innerText.match( /{"token":"(.*?)"}/ )[1];
 
-            var token = document.getElementsByTagName("script")[4].innerText.match( /{"token":"(.*?)"}/ )[1];
-            var person = document.getElementsByTagName("script")[4].innerText.match( /{"token":"(.*?)"}/ )[1];
+    if (event.data.action === 'sendMessage') {
 
-            if (event.data.action === 'sendMessage') {
+        var message = sjcl.encrypt("password", event.data.message)
 
-                var message = sjcl.encrypt("password", event.data.message)
+        var messageJSON = JSON.parse(message);
 
-                var messageJSON = JSON.parse(message);
+        var iv = messageJSON.iv;
+        var salt = messageJSON.salt;
+        var ct = messageJSON.ct;
 
-                var iv = messageJSON.iv;
-                var salt = messageJSON.salt;
-                var ct = messageJSON.ct;
+        message = iv + ':' + salt + ':' + ct;
 
-                message = iv + ':' + salt + ':' + ct;
+        // We should now be able to make a call.
+        var data = new FormData();
+        data.append('action_type', 'ma-type:user-generated-message');
+        data.append('body', message);
+        data.append('has_attachment', 'false');
+        data.append('message_id', big._d.join(''));
+        data.append('offline_threading_id', big._d.join(''));
+        data.append('other_user_fbid', otherUser);
+        data.append('source', 'source:messenger:web');
+        data.append('timestamp', millis);
+        data.append('fb_dtsg', token);
 
-                // We should now be able to make a call.
-                var data = new FormData();
-                data.append('action_type', 'ma-type:user-generated-message');
-                data.append('body', message);
-                data.append('has_attachment', 'false');
-                data.append('message_id', big._d.join(''));
-                data.append('offline_threading_id', big._d.join(''));
-                data.append('other_user_fbid', otherUser);
-                data.append('source', 'source:messenger:web');
-                data.append('timestamp', millis);
-                data.append('fb_dtsg', token);
+        var host = window.location.hostname;
 
-                var xhr = new XMLHttpRequest();
-                xhr.open('POST', 'https://www.messenger.com/messaging/send/', true);
-                xhr.send(data);
-                return
-            } else if (event.data.action === "sendHotEmoji"){
-                // We should now be able to make a call.
-                var data = new FormData();
-                data.append('action_type', 'ma-type:user-generated-message');
-                data.append('body', '🤔');
-                data.append('has_attachment', 'false');
-                data.append('message_id', big._d.join(''));
-                data.append('offline_threading_id', big._d.join(''));
-                data.append('other_user_fbid', otherUser);
-                data.append('source', 'source:messenger:web');
-                data.append('tags[0]', 'hot_emoji_size:large');
-                data.append('tags[1]', 'hot_emoji_source:hot_like');
-                data.append('timestamp', millis);
-                data.append('fb_dtsg', token);
+        var xhr = new XMLHttpRequest();
+        xhr.open('POST', 'https://' + host + '/messaging/send/', true);
+        xhr.send(data);
+    } else if (event.data.action === "sendHotEmoji") {
+        // We should now be able to make a call.
+        var data = new FormData();
+        data.append('action_type', 'ma-type:user-generated-message');
+        data.append('body', '🤔');
+        data.append('has_attachment', 'false');
+        data.append('message_id', big._d.join(''));
+        data.append('offline_threading_id', big._d.join(''));
+        data.append('other_user_fbid', otherUser);
+        data.append('source', 'source:messenger:web');
+        data.append('tags[0]', 'hot_emoji_size:large');
+        data.append('tags[1]', 'hot_emoji_source:hot_like');
+        data.append('timestamp', millis);
+        data.append('fb_dtsg', token);
 
-                var xhr = new XMLHttpRequest();
-                xhr.open('POST', 'https://www.messenger.com/messaging/send/', true);
-                xhr.send(data);
-            }
-        }
+        var host = window.location.hostname;
+
+        var xhr = new XMLHttpRequest();
+        xhr.open('POST', 'https://' + host + '/messaging/send/', true);
+        xhr.send(data);
     }
 }, false);
