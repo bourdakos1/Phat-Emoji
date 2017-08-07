@@ -67,6 +67,10 @@ const mode = "ccm";
 const adata = "";
 const cipher = "aes";
 
+function htmlEncode(html) {
+    return document.createElement('a').appendChild(document.createTextNode(html)).parentNode.innerHTML;
+};
+
 MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
 
 var observer = new MutationObserver(function(mutations, observer) {
@@ -91,7 +95,8 @@ var observer = new MutationObserver(function(mutations, observer) {
             try {
                 var decrypted = sjcl.decrypt("password", parsed);
                 encrypt[i].innerHTML = '<div style="display: flex;"><div style="flex: 0; margin-right:10px"><img alt="🔑" class="_1ift _2560 img" src="https://static.xx.fbcdn.net/images/emoji.php/v9/z4c/2/16/1f511.png"></div><div class="decrypted_message" style="flex: 1"></div>';
-                encrypt[i].getElementsByClassName("decrypted_message")[0].innerText = decrypted
+                encrypt[i].getElementsByClassName("decrypted_message")[0].innerHTML = htmlEncode(decrypted).replace(/\*(\S(.*?\S)?)\*/gm, '<b>$1</b>')
+                // console.log(decrypted.replace('s/\*([0-9a-zA-Z ]+?)\*', '/<b>$1<\/b>/g'))
             } catch (e) {
                 console.error('failed to parse: ' + parsed);
             }
