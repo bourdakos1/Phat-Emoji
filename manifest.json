@@ -12,16 +12,24 @@
                 "*://*.facebook.com/messages/*"
             ],
             "js": [
-                "getPagesSource.js"
+                "decrypt.js"
             ],
             "run_at": "document_end"
         }
     ],
+
+    "background": {
+        "scripts": ["background.js"]
+    },
     "browser_action": {
         "default_icon": "icon.png",
         "default_popup": "popup.html"
     },
+    "web_accessible_resources": [
+        "hook.js"
+    ],
     "permissions": [
+        "declarativeContent",
         "activeTab",
         "*://*.messenger.com/"
     ]
