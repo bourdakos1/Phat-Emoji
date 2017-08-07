@@ -90,7 +90,8 @@ var observer = new MutationObserver(function(mutations, observer) {
             var parsed = JSON.stringify( {"iv":iv,"v":v,"iter":iter,"ks":ks,"ts":ts,"mode":mode,"adata":adata,"cipher":cipher,"salt":salt,"ct":ct});
             try {
                 var decrypted = sjcl.decrypt("password", parsed);
-                encrypt[i].innerHTML = '<div style="display: flex;"><div style="flex: 0">🔑&nbsp;&nbsp;</div><div style="flex: 1">' + decrypted + '</div>';
+                encrypt[i].innerHTML = '<div style="display: flex;"><div style="flex: 0; margin-right:10px"><img alt="🔑" class="_1ift _2560 img" src="https://static.xx.fbcdn.net/images/emoji.php/v9/z4c/2/16/1f511.png"></div><div class="decrypted_message" style="flex: 1"></div>';
+                encrypt[i].getElementsByClassName("decrypted_message")[0].innerText = decrypted
             } catch (e) {
                 console.error('failed to parse: ' + parsed);
             }
