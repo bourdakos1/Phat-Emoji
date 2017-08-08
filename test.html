@@ -146,9 +146,11 @@
                 store.put('registrationId', MY_REGISTRATION_ID)
 
                 // I actually have no idea what the purpose of this is...????
+                // As you can see its random everytime... YET IT DOESNT YELLL AT MEEEEE
                 // We're only dealing with one device for sanity....
+                // ... maybe its because  I start a new session everytime?
                 var deviceId = 0;
-                var RECIPIENT_ADDRESS = new libsignal.SignalProtocolAddress("recipients_perminent_fb_id", deviceId);
+                var RECIPIENT_ADDRESS = new libsignal.SignalProtocolAddress("recipients_perminent_fb_id" +  Math.random(), Math.random());
 
                 // Instantiate a SessionBuilder for a remote recipientId + deviceId tuple.
                 var sessionBuilder = new libsignal.SessionBuilder(store, RECIPIENT_ADDRESS);
@@ -180,7 +182,6 @@
                         document.getElementById("output").innerText = ciphertext.body
 
                         ENCRYPTION = ciphertext.body;
-                        // decrypt(ciphertext.body);
                     });
                 });
 
@@ -199,9 +200,7 @@
                 otherStore.storePreKey(OTHER_PRE_KEY_ID, OTHER_PRE_KEY);
                 otherStore.storeSignedPreKey(OTHER_SIGNED_PRE_KEY_ID, OTHER_SIGNED_PRE_KEY);
 
-                // We're only dealing with one device for sanity....
-                var deviceId = 0;
-                var RECIPIENT_ADDRESS = new libsignal.SignalProtocolAddress("shitstormmms", deviceId);
+                var RECIPIENT_ADDRESS = new libsignal.SignalProtocolAddress("shitstormmms" +  Math.random(), Math.random());
 
                 var otherSessionCipher = new libsignal.SessionCipher(otherStore, RECIPIENT_ADDRESS);
 
