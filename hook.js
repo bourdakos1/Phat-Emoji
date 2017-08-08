@@ -223,15 +223,27 @@ loopy = function(node) {
     	if (key.startsWith("__reactInternalInstance$")) {
             let instance = node[key]
             if (instance['memoizedState'] == null) {
-                for (let childIndex in instance['memoizedProps']['children']) {
-                    let children = instance['memoizedProps']['children'][childIndex]['props']['children']
-                    let id = childPropLoop(children)
-                    if (id != null) {
-                        return id;
+                if (instance != null) {
+                    if (instance['memoizedProps'] != null) {
+                        if ('children' in instance['memoizedProps']) {
+                            for (let childIndex in instance['memoizedProps']['children']) {
+                                if (instance['memoizedProps']['children'][childIndex] != null) {
+                                    if (instance['memoizedProps']['children'][childIndex]['props'] != null) {
+                                        if ('children' in instance['memoizedProps']['children'][childIndex]['props']) {
+                                            let children = instance['memoizedProps']['children'][childIndex]['props']['children']
+                                            let id = childPropLoop(children)
+                                            if (id != null) {
+                                                return id;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }
-            return instance
+            return null
     	}
     }
     for (let child in node.children) {
