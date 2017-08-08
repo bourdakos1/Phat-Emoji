@@ -1,115 +1,45 @@
-var KeyHelper = libsignal.KeyHelper;
+var SESSION_BUILDER;
+var RECIPIENT_ADDRESS = new libsignal.SignalProtocolAddress("recipients_perminent_fb_id", 0);
+var STORE = new SignalProtocolStore();
 
-function stringToArrayBuffer(str) {
-    var buf = new ArrayBuffer(str.length*2); // 2 bytes for each char
-    var bufView = new Uint16Array(buf);
-    for (var i=0, strLen=str.length; i<strLen; i++) {
-        bufView[i] = str.charCodeAt(i);
-    }
-    return buf;
+// Your goods.
+var MY_REGISTRATION_ID = 4962;
+var MY_IDENTITY_KEY = {pubKey: new dcodeIO.ByteBuffer.wrap(b64DecodeUnicode('BVHDpMOXwpJyw5XCpcK3wqLDtsO2a8K5w4vDu1DCqlAME1MrLGfDn8OtJmE9w4nDjEI='), 'binary').toArrayBuffer(), privKey: new dcodeIO.ByteBuffer.wrap(b64DecodeUnicode('WCQ0HHzDsMOYO8O4TDR1BMOsdF7DvW3CjRwiKlPCn37DiC4Gdmw2bw=='), 'binary').toArrayBuffer()};
+
+// The recipients public keys that will be loaded from the server.
+var OTHER_REGISTRATION_ID = 1831;
+var OTHER_IDENTITY_KEY_PUB = new dcodeIO.ByteBuffer.wrap(b64DecodeUnicode('BcKMwoDDkVoEGm13w48QPMO9Jy1iw5kxw5l4w63DrnTDhEjDicOXwovDiMOiZMOqNw=='), 'binary').toArrayBuffer();
+
+var OTHER_SIGNED_PRE_KEY_ID = 1;
+var OTHER_SIGNED_PRE_KEY_PUB = new dcodeIO.ByteBuffer.wrap(b64DecodeUnicode('BTLCnsOBw5XCnUrCjnvDkFnDpMOzwrt7w5RgdsKAKjs2FcOTw55ew7HCtcKYw6w9fSw='), 'binary').toArrayBuffer();
+var OTHER_SIGNED_PRE_KEY_SIG = new dcodeIO.ByteBuffer.wrap(b64DecodeUnicode('L8KHw7fCmTbDg8K3OilKJjzCv8KPw4bDtUjCsiBeXsOJJ0nCrRbDk8Orw4bCkcKOwr/ClFbCiDtRIR3CjcOBw4HDmD7CrgLCqMKEw5fDisKrw51xw6nDsADCsVvDisOJV8K4wrkA'), 'binary').toArrayBuffer();
+
+var OTHER_PRE_KEY_ID = 1;
+var OTHER_PRE_KEY_PUB = new dcodeIO.ByteBuffer.wrap(b64DecodeUnicode('BcKoRlPCj8KLOE4FwrNSDRvDs8OFDV/CkQTDpHAhw6fCl8O1w6bDpMO3UnrDjFYD'), 'binary').toArrayBuffer();
+
+function b64EncodeUnicode(str) {
+    // first we use encodeURIComponent to get percent-encoded UTF-8,
+    // then we convert the percent encodings into raw bytes which
+    // can be fed into btoa.
+    return btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g,
+        function toSolidBytes(match, p1) {
+            return String.fromCharCode('0x' + p1);
+    }));
 }
 
-function arrayBufferToString(buf) {
-    return String.fromCharCode.apply(null, new Uint16Array(buf));
-}
-
-var MY_IDENTITY_KEY;
-var MY_REGISTRATION_ID;
-
-function generateMyIdentity() {
-    console.log("My Identity");
-    return Promise.all([
-        KeyHelper.generateIdentityKeyPair(),
-        KeyHelper.generateRegistrationId(),
-    ]).then(function(result) {
-        console.log(result[0]);
-        console.log(result[1]);
-        MY_IDENTITY_KEY = result[0];
-        MY_REGISTRATION_ID = result[1];
-    });
-}
-
-var OTHER_IDENTITY_KEY;
-var OTHER_REGISTRATION_ID;
-
-function generateRecepientIdentity() {
-    console.log("Other Identity");
-    return Promise.all([
-        KeyHelper.generateIdentityKeyPair(),
-        KeyHelper.generateRegistrationId(),
-    ]).then(function(result) {
-        console.log(result[0]);
-        console.log(result[1]);
-        OTHER_IDENTITY_KEY = result[0];
-        OTHER_REGISTRATION_ID = result[1];
-    });
-}
-
-function generatePreKeyBundle() {
-    console.log("prekey shit to be uploaded to server")
-    return Promise.all([
-        KeyHelper.generatePreKey(762183),
-        KeyHelper.generateSignedPreKey(MY_IDENTITY_KEY, 762183),
-    ]).then(function(keys) {
-        var preKey = keys[0]
-        var signedPreKey = keys[1];
-
-        console.log(preKey.keyId)
-        console.log(preKey.keyPair)
-        console.log(signedPreKey.keyId)
-        console.log(signedPreKey.keyPair)
-
-        store.storePreKey(preKeyId, preKey.keyPair);
-        store.storeSignedPreKey(signedPreKeyId, signedPreKey.keyPair);
-
-        return {
-            identityKey: identity.pubKey,
-            registrationId : registrationId,
-            preKey:  {
-                keyId     : preKeyId,
-                publicKey : preKey.keyPair.pubKey
-            },
-            signedPreKey: {
-                keyId     : signedPreKeyId,
-                publicKey : signedPreKey.keyPair.pubKey,
-                signature : signedPreKey.signature
-            }
-        };
-    });
+function b64DecodeUnicode(str) {
+    // Going backwards: from bytestream, to percent-encoding, to original string.
+    return decodeURIComponent(atob(str).split('').map(function(c) {
+        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+    }).join(''));
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-    // We need the store to at least store our session.
-    var store = new SignalProtocolStore();
 
-    // the recipient id is the username or id for the recipient, device id can just be 0
-    // If we want to support multiple devices.... then we need to figure things out...
-    var address = new libsignal.SignalProtocolAddress("andrews_facebook_id", 0);
-
-    Promise.all([
-        generateMyIdentity(),
-        generateRecepientIdentity()
-    ]).then(function() {
-        SessionBuilder sessionBuilder = new libsignal.SessionBuilder(store, address);
-
-        var promise = sessionBuilder.processPreKey({
-            registrationId: MY_REGISTRATION_ID,
-            identityKey: MY_IDENTITY_KEY,
-            signedPreKey: {
-                keyId     : <Number>,
-                publicKey : <ArrayBuffer>,
-                signature : <ArrayBuffer>
-            },
-            preKey: {
-                keyId     : <Number>,
-                publicKey : <ArrayBuffer>
-            }
-        });
-
-        promise.then(function onsuccess() {
-            console.log('shitting it works');
-        });
-    });
+    // start up an encryption session
+    STORE.put('identityKey', MY_IDENTITY_KEY)
+    STORE.put('registrationId', MY_REGISTRATION_ID)
+    SESSION_BUILDER = new libsignal.SessionBuilder(STORE, RECIPIENT_ADDRESS);
 
     document.getElementById('message').addEventListener('keydown', function(e) {
         console.log(e.keyCode);
@@ -142,7 +72,34 @@ function validate() {
     message.innerText = '';
     message.focus();
 
-    chrome.tabs.query({currentWindow: true, active: true}, function(tabArray) {
-        chrome.tabs.sendMessage(tabArray[0].id, { action: "sendMessage", message: messageText });
+    // encrypt
+    var promise = SESSION_BUILDER.processPreKey({
+        registrationId: OTHER_REGISTRATION_ID,
+        identityKey: OTHER_IDENTITY_KEY_PUB,
+        signedPreKey: {
+            keyId     : OTHER_SIGNED_PRE_KEY_ID,
+            publicKey : OTHER_SIGNED_PRE_KEY_PUB,
+            signature : OTHER_SIGNED_PRE_KEY_SIG
+        },
+        preKey: {
+            keyId     : OTHER_PRE_KEY_ID,
+            publicKey : OTHER_PRE_KEY_PUB
+        }
+    });
+
+    promise.then(function onsuccess() {
+        // encrypt messages
+        var plaintext = new dcodeIO.ByteBuffer.wrap(messageText, 'binary').toArrayBuffer()
+        var sessionCipher = new libsignal.SessionCipher(STORE, RECIPIENT_ADDRESS);
+        sessionCipher.encrypt(plaintext).then(function(ciphertext) {
+            // ciphertext -> { type: <Number>, body: <string> }
+            chrome.tabs.query({currentWindow: true, active: true}, function(tabArray) {
+                chrome.tabs.sendMessage(tabArray[0].id, { action: "sendMessage", message: b64EncodeUnicode(ciphertext.body) });
+            });
+        });
+    });
+
+    promise.catch(function onerror(error) {
+        console.error(error);
     });
 }

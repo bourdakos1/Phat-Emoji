@@ -40,7 +40,7 @@ SignalProtocolStore.prototype = {
 		if (trusted === undefined) {
 			return Promise.resolve(true);
 		}
-		return Promise.resolve(util.toString(identityKey) === util.toString(trusted));
+		return Promise.resolve(dcodeIO.ByteBuffer.wrap(identityKey).toString('binary') === trusted);
 	},
 	loadIdentityKey: function(identifier) {
 		if (identifier === null || identifier === undefined)
