@@ -20,8 +20,8 @@
 
                     MY_REGISTRATION_ID = result[1]
                     MY_IDENTITY_KEY_PUB = result[0].pubKey
-                    document.getElementById("my-id-key-pub").innerText = 'PubKey: ' + new dcodeIO.ByteBuffer.wrap(result[0].pubKey).toString('binary');
-                    document.getElementById("my-id-key-priv").innerText = 'PrivKey: '+ new dcodeIO.ByteBuffer.wrap(result[0].privKey).toString('binary');
+                    document.getElementById("my-id-key-pub").innerText = 'PubKey: ' + b64EncodeUnicode(new dcodeIO.ByteBuffer.wrap(result[0].pubKey).toString('binary'));
+                    document.getElementById("my-id-key-priv").innerText = 'PrivKey: '+ b64EncodeUnicode(new dcodeIO.ByteBuffer.wrap(result[0].privKey).toString('binary'));
                     document.getElementById("my-reg-id").innerText = 'Registration Id: '+ result[1];
                 });
             }
@@ -56,8 +56,8 @@
 
                     OTHER_REGISTRATION_ID = result[1]
                     OTHER_IDENTITY_KEY_PUB = result[0].pubKey
-                    document.getElementById("other-id-key-pub").innerText = 'PubKey: ' + new dcodeIO.ByteBuffer.wrap(result[0].pubKey).toString('binary');
-                    document.getElementById("other-id-key-priv").innerText = 'PrivKey: '+ new dcodeIO.ByteBuffer.wrap(result[0].privKey).toString('binary');
+                    document.getElementById("other-id-key-pub").innerText = 'PubKey: ' + b64EncodeUnicode(new dcodeIO.ByteBuffer.wrap(result[0].pubKey).toString('binary'));
+                    document.getElementById("other-id-key-priv").innerText = 'PrivKey: '+ b64EncodeUnicode(new dcodeIO.ByteBuffer.wrap(result[0].privKey).toString('binary'));
                     document.getElementById("other-reg-id").innerText = 'Registration Id: '+ result[1];
                 });
             }
@@ -82,14 +82,14 @@
 
                     console.log(preKey)
                     document.getElementById("other-pre-key-key-id").innerText = 'KeyId: '+ preKey.keyId;
-                    document.getElementById("other-pre-key-pub").innerText = 'PubKey: ' + new dcodeIO.ByteBuffer.wrap(preKey.keyPair.pubKey).toString('binary');
-                    document.getElementById("other-pre-key-priv").innerText = 'PrivKey: '+ new dcodeIO.ByteBuffer.wrap(preKey.keyPair.privKey).toString('binary');
+                    document.getElementById("other-pre-key-pub").innerText = 'PubKey: ' + b64EncodeUnicode(new dcodeIO.ByteBuffer.wrap(preKey.keyPair.pubKey).toString('binary'));
+                    document.getElementById("other-pre-key-priv").innerText = 'PrivKey: '+ b64EncodeUnicode(new dcodeIO.ByteBuffer.wrap(preKey.keyPair.privKey).toString('binary'));
 
                     console.log(signedPreKey)
                     document.getElementById("other-signed-pre-key-key-id").innerText = 'KeyId: '+ signedPreKey.keyId;
-                    document.getElementById("other-signed-pre-key-pub").innerText = 'PubKey: ' + new dcodeIO.ByteBuffer.wrap(signedPreKey.keyPair.pubKey).toString('binary');
-                    document.getElementById("other-signed-pre-key-priv").innerText = 'PrivKey: '+ new dcodeIO.ByteBuffer.wrap(signedPreKey.keyPair.privKey).toString('binary');
-                    document.getElementById("other-signed-pre-key-signature").innerText = 'Signature: '+ new dcodeIO.ByteBuffer.wrap(signedPreKey.signature).toString('binary');
+                    document.getElementById("other-signed-pre-key-pub").innerText = 'PubKey: ' + b64EncodeUnicode(new dcodeIO.ByteBuffer.wrap(signedPreKey.keyPair.pubKey).toString('binary'));
+                    document.getElementById("other-signed-pre-key-priv").innerText = 'PrivKey: '+ b64EncodeUnicode(new dcodeIO.ByteBuffer.wrap(signedPreKey.keyPair.privKey).toString('binary'));
+                    document.getElementById("other-signed-pre-key-signature").innerText = 'Signature: '+ b64EncodeUnicode(new dcodeIO.ByteBuffer.wrap(signedPreKey.signature).toString('binary'));
                 });
             }
 
@@ -104,6 +104,23 @@
 
             var ENCRYPTION;
 
+            function b64EncodeUnicode(str) {
+                // first we use encodeURIComponent to get percent-encoded UTF-8,
+                // then we convert the percent encodings into raw bytes which
+                // can be fed into btoa.
+                return btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g,
+                    function toSolidBytes(match, p1) {
+                        return String.fromCharCode('0x' + p1);
+                }));
+            }
+
+            function b64DecodeUnicode(str) {
+                // Going backwards: from bytestream, to percent-encoding, to original string.
+                return decodeURIComponent(atob(str).split('').map(function(c) {
+                    return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+                }).join(''));
+            }
+
             function encrypt() {
                 var store = new SignalProtocolStore();
 
@@ -114,8 +131,7 @@
                 // As you can see its random everytime... YET IT DOESNT YELLL AT MEEEEE
                 // We're only dealing with one device for sanity....
                 // ... maybe its because  I start a new session everytime?
-                var deviceId = 0;
-                var RECIPIENT_ADDRESS = new libsignal.SignalProtocolAddress("recipients_perminent_fb_id" +  Math.random(), Math.random());
+                var RECIPIENT_ADDRESS = new libsignal.SignalProtocolAddress("recipients_perminent_fb_id", 0);
 
                 // Instantiate a SessionBuilder for a remote recipientId + deviceId tuple.
                 var sessionBuilder = new libsignal.SessionBuilder(store, RECIPIENT_ADDRESS);
@@ -140,13 +156,14 @@
                 promise.then(function onsuccess() {
                     // encrypt messages
                     console.log(document.getElementById("message").value)
-                    var plaintext = document.getElementById("message").value
+                    var plaintext = new dcodeIO.ByteBuffer.wrap(document.getElementById("message").value, 'binary').toArrayBuffer()
                     var sessionCipher = new libsignal.SessionCipher(store, RECIPIENT_ADDRESS);
                     sessionCipher.encrypt(plaintext).then(function(ciphertext) {
                         // ciphertext -> { type: <Number>, body: <string> }
-                        document.getElementById("output").innerText = ciphertext.body
+                        document.getElementById("output").innerText = b64EncodeUnicode(ciphertext.body)
 
                         ENCRYPTION = ciphertext.body;
+                        console.log(ENCRYPTION)
                     });
                 });
 
@@ -164,11 +181,13 @@
                 otherStore.storePreKey(OTHER_PRE_KEY_ID, OTHER_PRE_KEY);
                 otherStore.storeSignedPreKey(OTHER_SIGNED_PRE_KEY_ID, OTHER_SIGNED_PRE_KEY);
 
-                var RECIPIENT_ADDRESS = new libsignal.SignalProtocolAddress("shitstormmms" +  Math.random(), Math.random());
+                var RECIPIENT_ADDRESS = new libsignal.SignalProtocolAddress("shitstormmms", 0);
 
                 var otherSessionCipher = new libsignal.SessionCipher(otherStore, RECIPIENT_ADDRESS);
 
-                otherSessionCipher.decryptPreKeyWhisperMessage(ENCRYPTION, 'binary').then(function(plaintext) {
+                console.log(b64DecodeUnicode(document.getElementById("output").innerText))
+
+                otherSessionCipher.decryptPreKeyWhisperMessage(b64DecodeUnicode(document.getElementById("output").innerText), 'binary').then(function(plaintext) {
                     document.getElementById("output2").innerText = new dcodeIO.ByteBuffer.wrap(plaintext).toString('binary')
                 });
             }
@@ -204,7 +223,7 @@
         </div>
         <div>
             Recipient:
-            <ul>
+            <ul style="word-wrap: break-word;">
                 <li id="other-reg-id">RegistrationId: _</li>
                 <li>IdentityKey:
                     <ul>
@@ -235,7 +254,7 @@
         <button onclick="encrypt()">encrypt</button>
         </br>
         </br>
-        <div id="output">Output: _</div>
+        <div style="word-wrap: break-word;" id="output">Output: _</div>
 
         <h3>Decrypt Message:</h3>
         <button onclick="decrypt()">decrypt</button>
