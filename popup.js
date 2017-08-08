@@ -13,88 +13,101 @@ function arrayBufferToString(buf) {
     return String.fromCharCode.apply(null, new Uint16Array(buf));
 }
 
-function generateIdentity(store) {
+var MY_IDENTITY_KEY;
+var MY_REGISTRATION_ID;
+
+function generateMyIdentity() {
+    console.log("My Identity");
     return Promise.all([
         KeyHelper.generateIdentityKeyPair(),
         KeyHelper.generateRegistrationId(),
     ]).then(function(result) {
-        console.log(result[0])
-        console.log(result[1])
-        store.put('identityKey', result[0]);
-        store.put('registrationId', result[1]);
+        console.log(result[0]);
+        console.log(result[1]);
+        MY_IDENTITY_KEY = result[0];
+        MY_REGISTRATION_ID = result[1];
     });
 }
 
-function generatePreKeyBundle(store, preKeyId, signedPreKeyId) {
+var OTHER_IDENTITY_KEY;
+var OTHER_REGISTRATION_ID;
+
+function generateRecepientIdentity() {
+    console.log("Other Identity");
     return Promise.all([
-        store.getIdentityKeyPair(),
-        store.getLocalRegistrationId()
+        KeyHelper.generateIdentityKeyPair(),
+        KeyHelper.generateRegistrationId(),
     ]).then(function(result) {
-        var identity = result[0];
-        var registrationId = result[1];
+        console.log(result[0]);
+        console.log(result[1]);
+        OTHER_IDENTITY_KEY = result[0];
+        OTHER_REGISTRATION_ID = result[1];
+    });
+}
 
-        return Promise.all([
-            KeyHelper.generatePreKey(preKeyId),
-            KeyHelper.generateSignedPreKey(identity, signedPreKeyId),
-        ]).then(function(keys) {
-            var preKey = keys[0]
-            var signedPreKey = keys[1];
+function generatePreKeyBundle() {
+    console.log("prekey shit to be uploaded to server")
+    return Promise.all([
+        KeyHelper.generatePreKey(762183),
+        KeyHelper.generateSignedPreKey(MY_IDENTITY_KEY, 762183),
+    ]).then(function(keys) {
+        var preKey = keys[0]
+        var signedPreKey = keys[1];
 
-            store.storePreKey(preKeyId, preKey.keyPair);
-            store.storeSignedPreKey(signedPreKeyId, signedPreKey.keyPair);
+        console.log(preKey.keyId)
+        console.log(preKey.keyPair)
+        console.log(signedPreKey.keyId)
+        console.log(signedPreKey.keyPair)
 
-            return {
-                identityKey: identity.pubKey,
-                registrationId : registrationId,
-                preKey:  {
-                    keyId     : preKeyId,
-                    publicKey : preKey.keyPair.pubKey
-                },
-                signedPreKey: {
-                    keyId     : signedPreKeyId,
-                    publicKey : signedPreKey.keyPair.pubKey,
-                    signature : signedPreKey.signature
-                }
-            };
-        });
+        store.storePreKey(preKeyId, preKey.keyPair);
+        store.storeSignedPreKey(signedPreKeyId, signedPreKey.keyPair);
+
+        return {
+            identityKey: identity.pubKey,
+            registrationId : registrationId,
+            preKey:  {
+                keyId     : preKeyId,
+                publicKey : preKey.keyPair.pubKey
+            },
+            signedPreKey: {
+                keyId     : signedPreKeyId,
+                publicKey : signedPreKey.keyPair.pubKey,
+                signature : signedPreKey.signature
+            }
+        };
     });
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-    var MY_ADDRESS = new libsignal.SignalProtocolAddress("nickib", 1);
-    var RECIPIENT_ADDRESS   = new libsignal.SignalProtocolAddress("drewdizzle", 1);
+    // We need the store to at least store our session.
+    var store = new SignalProtocolStore();
 
-    var myStore = new SignalProtocolStore();
-
-    var recipientStore = new SignalProtocolStore();
-    var recipientPreKeyId = 1337;
-    var recipientSignedKeyId = 1;
+    // the recipient id is the username or id for the recipient, device id can just be 0
+    // If we want to support multiple devices.... then we need to figure things out...
+    var address = new libsignal.SignalProtocolAddress("andrews_facebook_id", 0);
 
     Promise.all([
-        generateIdentity(myStore),
-        generateIdentity(recipientStore),
+        generateMyIdentity(),
+        generateRecepientIdentity()
     ]).then(function() {
-        return generatePreKeyBundle(recipientStore, recipientPreKeyId, recipientSignedKeyId);
-    }).then(function(preKeyBundle) {
-        var builder = new libsignal.SessionBuilder(myStore, RECIPIENT_ADDRESS);
-        return builder.processPreKey(preKeyBundle).then(function() {
+        SessionBuilder sessionBuilder = new libsignal.SessionBuilder(store, address);
 
-            var originalMessage = stringToArrayBuffer("I hate you");
-            var mySessionCipher = new libsignal.SessionCipher(myStore, RECIPIENT_ADDRESS);
-            var recipientSessionCipher = new libsignal.SessionCipher(recipientStore, MY_ADDRESS);
+        var promise = sessionBuilder.processPreKey({
+            registrationId: MY_REGISTRATION_ID,
+            identityKey: MY_IDENTITY_KEY,
+            signedPreKey: {
+                keyId     : <Number>,
+                publicKey : <ArrayBuffer>,
+                signature : <ArrayBuffer>
+            },
+            preKey: {
+                keyId     : <Number>,
+                publicKey : <ArrayBuffer>
+            }
+        });
 
-            mySessionCipher.encrypt(originalMessage).then(function(ciphertext) {
-
-                console.log(ciphertext.body);
-
-                // check for ciphertext.type to be 3 which includes the PREKEY_BUNDLE
-                return recipientSessionCipher.decryptPreKeyWhisperMessage(ciphertext.body, 'binary');
-
-            }).then(function(plaintext) {
-
-                console.log(arrayBufferToString(plaintext));
-
-            });
+        promise.then(function onsuccess() {
+            console.log('shitting it works');
         });
     });
 
