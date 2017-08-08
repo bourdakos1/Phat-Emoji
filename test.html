@@ -8,17 +8,7 @@
             var KeyHelper = libsignal.KeyHelper;
 
             var MY_IDENTITY_KEY;
-
-            // FOR SESSION STARTING:
             var MY_REGISTRATION_ID;
-            var MY_IDENTITY_KEY_PUB;
-
-            var MY_SIGNED_PRE_KEY_ID;
-            var MY_SIGNED_PRE_KEY_PUB;
-            var MY_SIGNED_PRE_KEY_SIG;
-
-            var MY_PRE_KEY_ID;
-            var MY_PRE_KEY_PUB;
 
             function generateMyIdentity() {
                 console.log("My Identity");
@@ -36,9 +26,7 @@
                 });
             }
 
-            var OTHER_IDENTITY_KEY;
-
-            // FOR SESSION STARTING:
+            // All of this needs to be dumped up to the server.
             var OTHER_REGISTRATION_ID;
             var OTHER_IDENTITY_KEY_PUB;
 
@@ -49,9 +37,15 @@
             var OTHER_PRE_KEY_ID;
             var OTHER_PRE_KEY_PUB;
 
-            var OTHER_SIGNED_PRE_KEY;
-            var OTHER_PRE_KEY;
+            // This needs to be kept locally.
+            var OTHER_IDENTITY_KEY;
+            // + OTHER_REGISTRATION_ID
 
+            // + OTHER_SIGNED_PRE_KEY_ID
+            var OTHER_SIGNED_PRE_KEY;
+
+            // + OTHER_PRE_KEY_ID
+            var OTHER_PRE_KEY;
 
             function generateRecepientIdentity() {
                 return Promise.all([
@@ -65,34 +59,6 @@
                     document.getElementById("other-id-key-pub").innerText = 'PubKey: ' + new dcodeIO.ByteBuffer.wrap(result[0].pubKey).toString('binary');
                     document.getElementById("other-id-key-priv").innerText = 'PrivKey: '+ new dcodeIO.ByteBuffer.wrap(result[0].privKey).toString('binary');
                     document.getElementById("other-reg-id").innerText = 'Registration Id: '+ result[1];
-                });
-            }
-
-            function generateMyPreKeyBundle() {
-                return Promise.all([
-                    KeyHelper.generatePreKey(0),
-                    KeyHelper.generateSignedPreKey(MY_IDENTITY_KEY, 0),
-                ]).then(function(keys) {
-                    var preKey = keys[0]
-                    var signedPreKey = keys[1];
-
-                    MY_SIGNED_PRE_KEY_ID = signedPreKey.keyId;
-                    MY_SIGNED_PRE_KEY_PUB = signedPreKey.keyPair.pubKey;
-                    MY_SIGNED_PRE_KEY_SIG = signedPreKey.signature;
-
-                    MY_PRE_KEY_ID = preKey.keyId;
-                    MY_PRE_KEY_PUB = preKey.keyPair.pubKey;
-
-                    console.log(preKey)
-                    document.getElementById("my-pre-key-key-id").innerText = 'KeyId: '+ preKey.keyId;
-                    document.getElementById("my-pre-key-pub").innerText = 'PubKey: ' + new dcodeIO.ByteBuffer.wrap(preKey.keyPair.pubKey).toString('binary');
-                    document.getElementById("my-pre-key-priv").innerText = 'PrivKey: '+ new dcodeIO.ByteBuffer.wrap(preKey.keyPair.privKey).toString('binary');
-
-                    console.log(signedPreKey)
-                    document.getElementById("my-signed-pre-key-key-id").innerText = 'KeyId: '+ signedPreKey.keyId;
-                    document.getElementById("my-signed-pre-key-pub").innerText = 'PubKey: ' + new dcodeIO.ByteBuffer.wrap(signedPreKey.keyPair.pubKey).toString('binary');
-                    document.getElementById("my-signed-pre-key-priv").innerText = 'PrivKey: '+ new dcodeIO.ByteBuffer.wrap(signedPreKey.keyPair.privKey).toString('binary');
-                    document.getElementById("my-signed-pre-key-signature").innerText = 'Signature: '+ new dcodeIO.ByteBuffer.wrap(signedPreKey.signature).toString('binary');
                 });
             }
 
@@ -132,7 +98,6 @@
                     generateMyIdentity(),
                     generateRecepientIdentity()
                 ]).then(function() {
-                    generateMyPreKeyBundle()
                     generateRecipientPreKeyBundle()
                 });
             });
@@ -186,7 +151,6 @@
                 });
 
                 promise.catch(function onerror(error) {
-                    // handle identity key conflict
                     console.error(error);
                 });
             }
@@ -205,7 +169,6 @@
                 var otherSessionCipher = new libsignal.SessionCipher(otherStore, RECIPIENT_ADDRESS);
 
                 otherSessionCipher.decryptPreKeyWhisperMessage(ENCRYPTION, 'binary').then(function(plaintext) {
-                    // handle plaintext ArrayBuffer
                     document.getElementById("output2").innerText = new dcodeIO.ByteBuffer.wrap(plaintext).toString('binary')
                 });
             }
