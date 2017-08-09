@@ -3,19 +3,19 @@ var RECIPIENT_ADDRESS = new libsignal.SignalProtocolAddress("recipients_perminen
 var STORE = new SignalProtocolStore();
 
 // Your goods.
-var MY_REGISTRATION_ID = 4962;
-var MY_IDENTITY_KEY = {pubKey: new dcodeIO.ByteBuffer.wrap(b64DecodeUnicode('BVHDpMOXwpJyw5XCpcK3wqLDtsO2a8K5w4vDu1DCqlAME1MrLGfDn8OtJmE9w4nDjEI='), 'binary').toArrayBuffer(), privKey: new dcodeIO.ByteBuffer.wrap(b64DecodeUnicode('WCQ0HHzDsMOYO8O4TDR1BMOsdF7DvW3CjRwiKlPCn37DiC4Gdmw2bw=='), 'binary').toArrayBuffer()};
+var MY_REGISTRATION_ID = 2797;
+var MY_IDENTITY_KEY = {pubKey: new dcodeIO.ByteBuffer.wrap(b64DecodeUnicode('BWXClsO+Y8KPUF3DqMOvwovCoyfColPCqQNCw6XDjsONVsK/GDbCsMKzwotkwrN5WjI='), 'binary').toArrayBuffer(), privKey: new dcodeIO.ByteBuffer.wrap(b64DecodeUnicode('w5jCigRwwqQaQVVxw6bCgjbCjcKkUsKmJsO+w7onwowhfsOoUcOddgjDv8KqXmc='), 'binary').toArrayBuffer()};
 
 // The recipients public keys that will be loaded from the server.
-var OTHER_REGISTRATION_ID = 1831;
-var OTHER_IDENTITY_KEY_PUB = new dcodeIO.ByteBuffer.wrap(b64DecodeUnicode('BcKMwoDDkVoEGm13w48QPMO9Jy1iw5kxw5l4w63DrnTDhEjDicOXwovDiMOiZMOqNw=='), 'binary').toArrayBuffer();
+var OTHER_REGISTRATION_ID = 9;
+var OTHER_IDENTITY_KEY_PUB = new dcodeIO.ByteBuffer.wrap(b64DecodeUnicode('BXTDt0PCjMKaYFN3w5fCv8KAwqJNw4LDncKBdw4swq5TGULDmcKaV8OlN0zDvG4T'), 'binary').toArrayBuffer();
 
 var OTHER_SIGNED_PRE_KEY_ID = 1;
-var OTHER_SIGNED_PRE_KEY_PUB = new dcodeIO.ByteBuffer.wrap(b64DecodeUnicode('BTLCnsOBw5XCnUrCjnvDkFnDpMOzwrt7w5RgdsKAKjs2FcOTw55ew7HCtcKYw6w9fSw='), 'binary').toArrayBuffer();
-var OTHER_SIGNED_PRE_KEY_SIG = new dcodeIO.ByteBuffer.wrap(b64DecodeUnicode('L8KHw7fCmTbDg8K3OilKJjzCv8KPw4bDtUjCsiBeXsOJJ0nCrRbDk8Orw4bCkcKOwr/ClFbCiDtRIR3CjcOBw4HDmD7CrgLCqMKEw5fDisKrw51xw6nDsADCsVvDisOJV8K4wrkA'), 'binary').toArrayBuffer();
+var OTHER_SIGNED_PRE_KEY_PUB = new dcodeIO.ByteBuffer.wrap(b64DecodeUnicode('BQnDqgvDm2Nbw65eJMOIJ1QvRF7CrsKPwqXCksK7BCpMfX4ULkHDuRQ0Qg=='), 'binary').toArrayBuffer();
+var OTHER_SIGNED_PRE_KEY_SIG = new dcodeIO.ByteBuffer.wrap(b64DecodeUnicode('dcOhFSjClcOvKyLDiFDCs8KMw6PCv8OeKsOZejXDm1lqwpHCnsK2wpjDrz8+w79ZfcOpWUPCrzTCkMKqUMKjw6Ydw5Yiw4B4w4Z4RVUJMgt2wpDDnynCvn8Uw4nDnsKJ'), 'binary').toArrayBuffer();
 
 var OTHER_PRE_KEY_ID = 1;
-var OTHER_PRE_KEY_PUB = new dcodeIO.ByteBuffer.wrap(b64DecodeUnicode('BcKoRlPCj8KLOE4FwrNSDRvDs8OFDV/CkQTDpHAhw6fCl8O1w6bDpMO3UnrDjFYD'), 'binary').toArrayBuffer();
+var OTHER_PRE_KEY_PUB = new dcodeIO.ByteBuffer.wrap(b64DecodeUnicode('BXDDgcK1YTXClXsjw5NBw7/CjcOjKsONw7cdAcKrw4gnSRzDrMOoMHVdUHYafQ=='), 'binary').toArrayBuffer();
 
 function b64EncodeUnicode(str) {
     // first we use encodeURIComponent to get percent-encoded UTF-8,
@@ -94,7 +94,7 @@ function validate() {
         sessionCipher.encrypt(plaintext).then(function(ciphertext) {
             // ciphertext -> { type: <Number>, body: <string> }
             chrome.tabs.query({currentWindow: true, active: true}, function(tabArray) {
-                chrome.tabs.sendMessage(tabArray[0].id, { action: "sendMessage", message: b64EncodeUnicode(ciphertext.body) });
+                chrome.tabs.sendMessage(tabArray[0].id, { action: "sendMessage", message: '::::::' + b64EncodeUnicode(ciphertext.body) });
             });
         });
     });

@@ -12,6 +12,8 @@
                 "*://*.facebook.com/*"
             ],
             "js": [
+                "libsignal-protocol.js",
+                "InMemorySignalProtocolStore.js",
                 "decrypt.js"
             ],
             "run_at": "document_end"
