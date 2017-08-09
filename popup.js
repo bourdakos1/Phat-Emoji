@@ -34,7 +34,23 @@ function b64DecodeUnicode(str) {
     }).join(''));
 }
 
+function handlePaste (e) {
+    var clipboardData, pastedData;
+
+    // Stop data actually being pasted into div
+    e.stopPropagation();
+    e.preventDefault();
+
+    // Get pasted data via clipboard API
+    clipboardData = e.clipboardData || window.clipboardData;
+    pastedData = clipboardData.getData('Text');
+
+    // Do whatever with pasteddata
+    document.getElementById('message').innerText = pastedData;
+}
+
 document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('message').addEventListener('paste', handlePaste);
 
     // start up an encryption session
     STORE.put('identityKey', MY_IDENTITY_KEY)
