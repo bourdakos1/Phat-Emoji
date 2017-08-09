@@ -1,0 +1,263 @@
+<!doctype html>
+<html>
+    <head>
+        <title>Phat Emoji</title>
+        <script src="libsignal-protocol.js"></script>
+        <script src="InMemorySignalProtocolStore.js"></script>
+        <script>
+            var KeyHelper = libsignal.KeyHelper;
+
+            var MY_IDENTITY_KEY;
+            var MY_REGISTRATION_ID;
+
+            function generateMyIdentity() {
+                console.log("My Identity");
+                return Promise.all([
+                    KeyHelper.generateIdentityKeyPair(),
+                    KeyHelper.generateRegistrationId(),
+                ]).then(function(result) {
+                    MY_IDENTITY_KEY = result[0]
+
+                    MY_REGISTRATION_ID = result[1]
+                    MY_IDENTITY_KEY_PUB = result[0].pubKey
+                    document.getElementById("my-id-key-pub").innerText = 'PubKey: ' + b64EncodeUnicode(new dcodeIO.ByteBuffer.wrap(result[0].pubKey).toString('binary'));
+                    document.getElementById("my-id-key-priv").innerText = 'PrivKey: '+ b64EncodeUnicode(new dcodeIO.ByteBuffer.wrap(result[0].privKey).toString('binary'));
+                    document.getElementById("my-reg-id").innerText = 'Registration Id: '+ result[1];
+                });
+            }
+
+            // All of this needs to be dumped up to the server.
+            var OTHER_REGISTRATION_ID;
+            var OTHER_IDENTITY_KEY_PUB;
+
+            var OTHER_SIGNED_PRE_KEY_ID;
+            var OTHER_SIGNED_PRE_KEY_PUB;
+            var OTHER_SIGNED_PRE_KEY_SIG;
+
+            var OTHER_PRE_KEY_ID;
+            var OTHER_PRE_KEY_PUB;
+
+            // This needs to be kept locally.
+            var OTHER_IDENTITY_KEY;
+            // + OTHER_REGISTRATION_ID
+
+            // + OTHER_SIGNED_PRE_KEY_ID
+            var OTHER_SIGNED_PRE_KEY;
+
+            // + OTHER_PRE_KEY_ID
+            var OTHER_PRE_KEY;
+
+            function generateRecepientIdentity() {
+                return Promise.all([
+                    KeyHelper.generateIdentityKeyPair(),
+                    KeyHelper.generateRegistrationId(),
+                ]).then(function(result) {
+                    OTHER_IDENTITY_KEY = result[0]
+
+                    OTHER_REGISTRATION_ID = result[1]
+                    OTHER_IDENTITY_KEY_PUB = result[0].pubKey
+                    document.getElementById("other-id-key-pub").innerText = 'PubKey: ' + b64EncodeUnicode(new dcodeIO.ByteBuffer.wrap(result[0].pubKey).toString('binary'));
+                    document.getElementById("other-id-key-priv").innerText = 'PrivKey: '+ b64EncodeUnicode(new dcodeIO.ByteBuffer.wrap(result[0].privKey).toString('binary'));
+                    document.getElementById("other-reg-id").innerText = 'Registration Id: '+ result[1];
+                });
+            }
+
+            function generateRecipientPreKeyBundle() {
+                return Promise.all([
+                    KeyHelper.generatePreKey(1),
+                    KeyHelper.generateSignedPreKey(OTHER_IDENTITY_KEY, 1),
+                ]).then(function(keys) {
+                    var preKey = keys[0]
+                    var signedPreKey = keys[1];
+
+                    OTHER_SIGNED_PRE_KEY_ID = signedPreKey.keyId;
+                    OTHER_SIGNED_PRE_KEY_PUB = signedPreKey.keyPair.pubKey;
+                    OTHER_SIGNED_PRE_KEY_SIG = signedPreKey.signature;
+
+                    OTHER_PRE_KEY_ID = preKey.keyId;
+                    OTHER_PRE_KEY_PUB = preKey.keyPair.pubKey;
+
+                    OTHER_SIGNED_PRE_KEY = signedPreKey.keyPair;
+                    OTHER_PRE_KEY = preKey.keyPair;
+
+                    console.log(preKey)
+                    document.getElementById("other-pre-key-key-id").innerText = 'KeyId: '+ preKey.keyId;
+                    document.getElementById("other-pre-key-pub").innerText = 'PubKey: ' + b64EncodeUnicode(new dcodeIO.ByteBuffer.wrap(preKey.keyPair.pubKey).toString('binary'));
+                    document.getElementById("other-pre-key-priv").innerText = 'PrivKey: '+ b64EncodeUnicode(new dcodeIO.ByteBuffer.wrap(preKey.keyPair.privKey).toString('binary'));
+
+                    console.log(signedPreKey)
+                    document.getElementById("other-signed-pre-key-key-id").innerText = 'KeyId: '+ signedPreKey.keyId;
+                    document.getElementById("other-signed-pre-key-pub").innerText = 'PubKey: ' + b64EncodeUnicode(new dcodeIO.ByteBuffer.wrap(signedPreKey.keyPair.pubKey).toString('binary'));
+                    document.getElementById("other-signed-pre-key-priv").innerText = 'PrivKey: '+ b64EncodeUnicode(new dcodeIO.ByteBuffer.wrap(signedPreKey.keyPair.privKey).toString('binary'));
+                    document.getElementById("other-signed-pre-key-signature").innerText = 'Signature: '+ b64EncodeUnicode(new dcodeIO.ByteBuffer.wrap(signedPreKey.signature).toString('binary'));
+                });
+            }
+
+            document.addEventListener('DOMContentLoaded', function() {
+                Promise.all([
+                    generateMyIdentity(),
+                    generateRecepientIdentity()
+                ]).then(function() {
+                    generateRecipientPreKeyBundle()
+                });
+            });
+
+            var ENCRYPTION;
+
+            function b64EncodeUnicode(str) {
+                // first we use encodeURIComponent to get percent-encoded UTF-8,
+                // then we convert the percent encodings into raw bytes which
+                // can be fed into btoa.
+                return btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g,
+                    function toSolidBytes(match, p1) {
+                        return String.fromCharCode('0x' + p1);
+                }));
+            }
+
+            function b64DecodeUnicode(str) {
+                // Going backwards: from bytestream, to percent-encoding, to original string.
+                return decodeURIComponent(atob(str).split('').map(function(c) {
+                    return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+                }).join(''));
+            }
+
+            function encrypt() {
+                var store = new SignalProtocolStore();
+
+                store.put('identityKey', MY_IDENTITY_KEY)
+                store.put('registrationId', MY_REGISTRATION_ID)
+
+                // I actually have no idea what the purpose of this is...????
+                // As you can see its random everytime... YET IT DOESNT YELLL AT MEEEEE
+                // We're only dealing with one device for sanity....
+                // ... maybe its because  I start a new session everytime?
+                var RECIPIENT_ADDRESS = new libsignal.SignalProtocolAddress("recipients_perminent_fb_id", 0);
+
+                // Instantiate a SessionBuilder for a remote recipientId + deviceId tuple.
+                var sessionBuilder = new libsignal.SessionBuilder(store, RECIPIENT_ADDRESS);
+
+                // Process a prekey fetched from the server. Returns a promise that resolves
+                // once a session is created and saved in the store, or rejects if the
+                // identityKey differs from a previously seen identity for this address.
+                var promise = sessionBuilder.processPreKey({
+                    registrationId: OTHER_REGISTRATION_ID,
+                    identityKey: OTHER_IDENTITY_KEY_PUB,
+                    signedPreKey: {
+                        keyId     : OTHER_SIGNED_PRE_KEY_ID,
+                        publicKey : OTHER_SIGNED_PRE_KEY_PUB,
+                        signature : OTHER_SIGNED_PRE_KEY_SIG
+                    },
+                    preKey: {
+                        keyId     : OTHER_PRE_KEY_ID,
+                        publicKey : OTHER_PRE_KEY_PUB
+                    }
+                });
+
+                promise.then(function onsuccess() {
+                    // encrypt messages
+                    console.log(document.getElementById("message").value)
+                    var plaintext = new dcodeIO.ByteBuffer.wrap(document.getElementById("message").value, 'binary').toArrayBuffer()
+                    var sessionCipher = new libsignal.SessionCipher(store, RECIPIENT_ADDRESS);
+                    sessionCipher.encrypt(plaintext).then(function(ciphertext) {
+                        // ciphertext -> { type: <Number>, body: <string> }
+                        document.getElementById("output").innerText = b64EncodeUnicode(ciphertext.body)
+
+                        ENCRYPTION = ciphertext.body;
+                        console.log(ENCRYPTION)
+                    });
+                });
+
+                promise.catch(function onerror(error) {
+                    console.error(error);
+                });
+            }
+
+            function decrypt() {
+                var otherStore = new SignalProtocolStore();
+
+                otherStore.put('identityKey', OTHER_IDENTITY_KEY)
+                otherStore.put('registrationId', OTHER_REGISTRATION_ID)
+
+                otherStore.storePreKey(OTHER_PRE_KEY_ID, OTHER_PRE_KEY);
+                otherStore.storeSignedPreKey(OTHER_SIGNED_PRE_KEY_ID, OTHER_SIGNED_PRE_KEY);
+
+                var RECIPIENT_ADDRESS = new libsignal.SignalProtocolAddress("shitstormmms", 0);
+
+                var otherSessionCipher = new libsignal.SessionCipher(otherStore, RECIPIENT_ADDRESS);
+
+                console.log(b64DecodeUnicode(document.getElementById("output").innerText))
+
+                otherSessionCipher.decryptPreKeyWhisperMessage(b64DecodeUnicode(document.getElementById("output").innerText), 'binary').then(function(plaintext) {
+                    document.getElementById("output2").innerText = new dcodeIO.ByteBuffer.wrap(plaintext).toString('binary')
+                });
+            }
+        </script>
+    </head>
+    <body>
+        <div>
+            My:
+            <ul>
+                <li id="my-reg-id">RegistrationId: _</li>
+                <li>IdentityKey:
+                    <ul>
+                        <li id="my-id-key-pub">PubKey: _</li>
+                        <li id="my-id-key-priv">PrivKey: _</li>
+                    </ul>
+                </li>
+                <li>PreKey:
+                    <ul>
+                        <li id="my-pre-key-key-id">KeyId: _</li>
+                        <li id="my-pre-key-pub">PubKey: _</li>
+                        <li id="my-pre-key-priv">PrivKey: _</li>
+                    </ul>
+                </li>
+                <li>SignedPreKey:
+                    <ul>
+                        <li id="my-signed-pre-key-key-id">KeyId: _</li>
+                        <li id="my-signed-pre-key-pub">PubKey: _</li>
+                        <li id="my-signed-pre-key-priv">PrivKey: _</li>
+                        <li id="my-signed-pre-key-signature">Signature: _</li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+        <div>
+            Recipient:
+            <ul style="word-wrap: break-word;">
+                <li id="other-reg-id">RegistrationId: _</li>
+                <li>IdentityKey:
+                    <ul>
+                        <li id="other-id-key-pub">PubKey: _</li>
+                        <li id="other-id-key-priv">PrivKey: _</li>
+                    </ul>
+                </li>
+                <li>PreKey:
+                    <ul>
+                        <li id="other-pre-key-key-id">KeyId: _</li>
+                        <li id="other-pre-key-pub">PubKey: _</li>
+                        <li id="other-pre-key-priv">PrivKey: _</li>
+                    </ul>
+                </li>
+                <li>SignedPreKey:
+                    <ul>
+                        <li id="other-signed-pre-key-key-id">KeyId: _</li>
+                        <li id="other-signed-pre-key-pub">PubKey: _</li>
+                        <li id="other-signed-pre-key-priv">PrivKey: _</li>
+                        <li id="other-signed-pre-key-signature">Signature: _</li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+        <h3>Encrypt Message:</h3>
+        <div><span>Message: </span><input id="message"></input></div>
+        </br>
+        <button onclick="encrypt()">encrypt</button>
+        </br>
+        </br>
+        <div style="word-wrap: break-word;" id="output">Output: _</div>
+
+        <h3>Decrypt Message:</h3>
+        <button onclick="decrypt()">decrypt</button>
+        <div id="output2">Output: _</div>
+    </body>
+</html>
