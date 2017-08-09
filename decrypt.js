@@ -34,13 +34,11 @@ var observer = new MutationObserver(function(mutations, observer) {
 
     mutations.forEach(function (mutation) {
         if (mutation.addedNodes.length) {
-            // DEAL WITH EMOJI LATER
-            // // fired when a mutation occurs
-            // var errors = document.getElementsByClassName("_1o13");
-            // for (var i = 0; i < errors.length; i++) {
-            //     var node = errors[i].parentNode.parentNode
-            //     node.innerHTML = '<div aria-label="🤔" class="_2poz _ui9 _383m" tabindex="0"><img class="_19_s _1ift img" src="http://i.imgur.com/V5zsy2i.png" alt=""></div>'
-            // }
+            var emojis = $(mutation.addedNodes).find('._1o13');
+            for (var i = 0, len = emojis.length; i < len; i++) {
+                var node = emojis[i].parentNode.parentNode
+                node.innerHTML = '<div aria-label="🤔" class="_2poz _ui9 _383m" tabindex="0"><img class="_19_s _1ift img" src="http://i.imgur.com/V5zsy2i.png" alt=""></div>'
+            }
 
             var elements = $(mutation.addedNodes).find('._3oh-._58nk');
 
