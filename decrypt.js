@@ -74,7 +74,12 @@ var observer = new MutationObserver(function(mutations, observer) {
             Promise.all(promises).then(function(results) {
                 console.log('all promises returned');
                 for (var i = 0; i < results.length; i++) {
-                    var decrypted = new dcodeIO.ByteBuffer.wrap(results[i]).toString('binary')
+                    try {
+                        var decrypted = b64DecodeUnicode(new dcodeIO.ByteBuffer.wrap(results[i]).toString('binary'))
+                    } catch (e) {
+                        var decrypted = new dcodeIO.ByteBuffer.wrap(results[i]).toString('binary')
+                    }
+
                     console.log('decrypted: ' + decrypted);
                     elements[place[i]].innerHTML = '<div style="display: flex;"><div style="flex: 0; margin-right:10px"><img alt="🔑" class="_1ift _2560 img" src="https://static.xx.fbcdn.net/images/emoji.php/v9/z4c/2/16/1f511.png"></div><div style="word-wrap:break-word; min-width: 0;" class="decrypted_message" style="flex: 1"></div>';
                     elements[place[i]].getElementsByClassName("decrypted_message")[0].innerHTML = htmlEncode(decrypted).replace(/\*(\S(.*?\S)?)\*/gm, '<b>$1</b>').replace(/_(\S(.*?\S)?)_/gm, '<i>$1</i>').replace(/~(\S(.*?\S)?)~/gm, '<del>$1</del>')

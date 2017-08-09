@@ -105,7 +105,7 @@ function validate() {
 
     promise.then(function onsuccess() {
         // encrypt messages
-        var plaintext = new dcodeIO.ByteBuffer.wrap(messageText, 'binary').toArrayBuffer()
+        var plaintext = new dcodeIO.ByteBuffer.wrap(b64EncodeUnicode(messageText), 'binary').toArrayBuffer()
         var sessionCipher = new libsignal.SessionCipher(STORE, RECIPIENT_ADDRESS);
         sessionCipher.encrypt(plaintext).then(function(ciphertext) {
             // ciphertext -> { type: <Number>, body: <string> }
