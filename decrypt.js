@@ -42,7 +42,7 @@ var observer = new MutationObserver(function(mutations, observer) {
 
     var RECIPIENT_ADDRESS = new libsignal.SignalProtocolAddress("shitstormmms", 0);
 
-    var otherSessionCipher = new libsignal.SessionCipher(otherStore, RECIPIENT_ADDRESS);
+    // var otherSessionCipher = new libsignal.SessionCipher(otherStore, RECIPIENT_ADDRESS);
 
     // fired when a mutation occurs
     var errors = document.getElementsByClassName("_1o13");
@@ -55,11 +55,24 @@ var observer = new MutationObserver(function(mutations, observer) {
 
     var promises = [];
     var place = [];
+    console.log('about to loop');
     for (var i = 0; i < encrypt.length; i++) {
         var message = encrypt[i].innerText;
         if (message.split('::::::')[1] != null) {
             var message1 = message.split('::::::')[0]
             var message2 = message.split('::::::')[1]
+            console.log('decrypt: ' + message2);
+            var otherStore = new SignalProtocolStore();
+
+            otherStore.put('identityKey', OTHER_IDENTITY_KEY)
+            otherStore.put('registrationId', OTHER_REGISTRATION_ID)
+
+            otherStore.storePreKey(OTHER_PRE_KEY_ID, OTHER_PRE_KEY);
+            otherStore.storeSignedPreKey(OTHER_SIGNED_PRE_KEY_ID, OTHER_SIGNED_PRE_KEY);
+
+            var RECIPIENT_ADDRESS = new libsignal.SignalProtocolAddress("shitstormmms", 0);
+
+            var otherSessionCipher = new libsignal.SessionCipher(otherStore, RECIPIENT_ADDRESS);
             var promise = otherSessionCipher.decryptPreKeyWhisperMessage(b64DecodeUnicode(message2), 'binary');
             promises.push(promise);
             place.push(i);
@@ -70,6 +83,7 @@ var observer = new MutationObserver(function(mutations, observer) {
         console.log('all promises returned');
         for (var i = 0; i < results.length; i++) {
             var decrypted = new dcodeIO.ByteBuffer.wrap(results[i]).toString('binary')
+            console.log('decrypted: ' + decrypted);
             encrypt[place[i]].innerHTML = '<div style="display: flex;"><div style="flex: 0; margin-right:10px"><img alt="🔑" class="_1ift _2560 img" src="https://static.xx.fbcdn.net/images/emoji.php/v9/z4c/2/16/1f511.png"></div><div style="word-break: break-all; width: 100%;" class="decrypted_message" style="flex: 1"></div>';
             encrypt[place[i]].getElementsByClassName("decrypted_message")[0].innerHTML = htmlEncode(decrypted).replace(/\*(\S(.*?\S)?)\*/gm, '<b>$1</b>').replace(/_(\S(.*?\S)?)_/gm, '<i>$1</i>').replace(/~(\S(.*?\S)?)~/gm, '<del>$1</del>')
         }
