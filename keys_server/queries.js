@@ -6,16 +6,14 @@ var options = {
 };
 
 var pgp = require('pg-promise')(options);
-var connectionString = 'postgres://localhost:5432/public_keys';
+var connectionString = process.env.DATABASE_URL || 'postgres://localhost:5432/public_keys';
 var db = pgp(connectionString);
 
 function getKeys(req, res, next) {
     db.any('select * from keys')
     .then(function (data) {
         res.status(200)
-        .json({
-            data: data
-        });
+        .json(data);
     })
     .catch(function (err) {
         return next(err);
@@ -27,9 +25,7 @@ function getKey(req, res, next) {
     db.one('select * from keys where id = $1', fbID)
     .then(function (data) {
         res.status(200)
-        .json({
-            data: data
-        });
+        .json(data);
     })
     .catch(function (err) {
         return next(err);
