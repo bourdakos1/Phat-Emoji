@@ -1,0 +1,13 @@
+{
+    "name": "the-key-to-my-heart",
+    "version": "0.0.0",
+    "scripts": {
+        "start": "node ./bin/www"
+    },
+    "dependencies": {
+        "bluebird": "^3.4.7",
+        "body-parser": "^1.13.3",
+        "express": "^4.13.4",
+        "pg-promise": "^5.6.4"
+    }
+}
