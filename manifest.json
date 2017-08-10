@@ -35,6 +35,7 @@
         "declarativeContent",
         "activeTab",
         "*://*.messenger.com/",
-        "*://*.facebook.com/*"
+        "*://*.facebook.com/*",
+        "*://vast-spire-29018.herokuapp.com/api/keys/*"
     ]
 }
