@@ -46,7 +46,7 @@ function handlePaste (e) {
     pastedData = clipboardData.getData('Text');
 
     // Do whatever with pasteddata
-    document.getElementById('message').innerText = pastedData;
+    document.execCommand('inserttext', false, pastedData);
 }
 
 document.addEventListener('DOMContentLoaded', function() {
