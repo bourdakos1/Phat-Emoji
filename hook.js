@@ -206,7 +206,6 @@ window.addEventListener('message', event => {
     var big = new BigNumber(millis).multiply(2**22).add(Math.floor(Math.random() * 2**22))
 
     var token = document.getElementsByTagName("script")[4].innerText.match( /{"token":"(.*?)"}/ )[1];
-    var person = document.getElementsByTagName("script")[4].innerText.match( /{"token":"(.*?)"}/ )[1];
 
     if (event.data.action === 'sendMessage') {
         // We should now be able to make a call.
