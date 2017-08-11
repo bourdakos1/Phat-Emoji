@@ -52,6 +52,13 @@ function handlePaste (e) {
 document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('message').addEventListener('paste', handlePaste);
 
+    chrome.storage.local.get('key', function(items){
+        for (item in items) {
+            console.log(items);
+            console.log(items[item]);
+        }
+    });
+
     // start up an encryption session
     STORE.put('identityKey', MY_IDENTITY_KEY)
     STORE.put('registrationId', MY_REGISTRATION_ID)
