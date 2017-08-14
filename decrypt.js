@@ -39,7 +39,7 @@ var observer = new MutationObserver(function(mutations, observer) {
                 var OTHER_SIGNED_PRE_KEY_ID = items['key']['signedPreKey']['id'];
                 var OTHER_SIGNED_PRE_KEY = {pubKey: new dcodeIO.ByteBuffer.wrap(b64DecodeUnicode(items['key']['signedPreKey']['public']), 'binary').toArrayBuffer(), privKey: new dcodeIO.ByteBuffer.wrap(b64DecodeUnicode(items['key']['signedPreKey']['private']), 'binary').toArrayBuffer()};
 
-                var promises = [];
+                // var promises = [];
                 // var place = [];
                 for (var i = 0, len = elements.length; i < len; i++) {
                     var message = elements[i].innerText;
@@ -62,40 +62,45 @@ var observer = new MutationObserver(function(mutations, observer) {
 
                         var otherSessionCipher = new libsignal.SessionCipher(otherStore, RECIPIENT_ADDRESS);
                         let p = i;
-                        promises.push(otherSessionCipher.decryptPreKeyWhisperMessage(b64DecodeUnicode(message1), 'binary').then(function(result) {
+                        otherSessionCipher.decryptPreKeyWhisperMessage(b64DecodeUnicode(message1), 'binary').then(function(result) {
                             return {
                                 place: p,
                                 result: result
                             };
-                        }));
-                        // var promise2 = otherSessionCipher.decryptPreKeyWhisperMessage(b64DecodeUnicode(message2), 'binary');
-                        // promises.push(promise);
-                        // place.push(i);
-                        // promises.push(promise2);
-                        // place.push(i);
+                        }).then(function(result) {
+                            try {
+                                var decrypted = b64DecodeUnicode(new dcodeIO.ByteBuffer.wrap(result.result).toString('binary'))
+                            } catch (e) {
+                                var decrypted = ''
+                            }
+
+                            console.log('decrypted: ' + decrypted);
+                            console.log('decrypted: ' + result.place);
+
+                            elements[result.place].innerHTML = '<div style="display: flex;"><div style="flex: 0; margin-right:10px"><img alt="🔑" class="_1ift _2560 img" src="https://static.xx.fbcdn.net/images/emoji.php/v9/z4c/2/16/1f511.png"></div><div style="word-wrap:break-word; min-width: 0;" class="decrypted_message" style="flex: 1"></div>';
+                            elements[result.place].getElementsByClassName("decrypted_message")[0].innerHTML = htmlEncode(decrypted).replace(/\*(\S(.*?\S)?)\*/gm, '<b>$1</b>').replace(/_(\S(.*?\S)?)_/gm, '<i>$1</i>').replace(/~(\S(.*?\S)?)~/gm, '<del>$1</del>')
+                        });
+
+                        otherSessionCipher.decryptPreKeyWhisperMessage(b64DecodeUnicode(message2), 'binary').then(function(result) {
+                            return {
+                                place: p,
+                                result: result
+                            };
+                        }).then(function(result) {
+                            try {
+                                var decrypted = b64DecodeUnicode(new dcodeIO.ByteBuffer.wrap(result.result).toString('binary'))
+                            } catch (e) {
+                                var decrypted = ''
+                            }
+
+                            console.log('decrypted: ' + decrypted);
+                            console.log('decrypted: ' + result.place);
+
+                            elements[result.place].innerHTML = '<div style="display: flex;"><div style="flex: 0; margin-right:10px"><img alt="🔑" class="_1ift _2560 img" src="https://static.xx.fbcdn.net/images/emoji.php/v9/z4c/2/16/1f511.png"></div><div style="word-wrap:break-word; min-width: 0;" class="decrypted_message" style="flex: 1"></div>';
+                            elements[result.place].getElementsByClassName("decrypted_message")[0].innerHTML = htmlEncode(decrypted).replace(/\*(\S(.*?\S)?)\*/gm, '<b>$1</b>').replace(/_(\S(.*?\S)?)_/gm, '<i>$1</i>').replace(/~(\S(.*?\S)?)~/gm, '<del>$1</del>')
+                        });
                     }
                 }
-
-                if (!promises.length) {
-                    return
-                }
-
-                Promise.all(promises).then(function(results) {
-                    console.log('all promises returned');
-                    for (var i = 0; i < results.length; i++) {
-                        try {
-                            var decrypted = b64DecodeUnicode(new dcodeIO.ByteBuffer.wrap(results[i].result).toString('binary'))
-                        } catch (e) {
-                            var decrypted = ''
-                        }
-
-                        console.log('decrypted: ' + decrypted);
-                        console.log('decrypted: ' + results[i].place);
-
-                        elements[results[i].place].innerHTML = '<div style="display: flex;"><div style="flex: 0; margin-right:10px"><img alt="🔑" class="_1ift _2560 img" src="https://static.xx.fbcdn.net/images/emoji.php/v9/z4c/2/16/1f511.png"></div><div style="word-wrap:break-word; min-width: 0;" class="decrypted_message" style="flex: 1"></div>';
-                        elements[results[i].place].getElementsByClassName("decrypted_message")[0].innerHTML = htmlEncode(decrypted).replace(/\*(\S(.*?\S)?)\*/gm, '<b>$1</b>').replace(/_(\S(.*?\S)?)_/gm, '<i>$1</i>').replace(/~(\S(.*?\S)?)~/gm, '<del>$1</del>')
-                    }
-                });
             });
         }
     });
