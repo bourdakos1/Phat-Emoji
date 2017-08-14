@@ -2,6 +2,30 @@ var SESSION_BUILDER;
 var RECIPIENT_ADDRESS = new libsignal.SignalProtocolAddress("recipients_perminent_fb_id", 0);
 var STORE = new SignalProtocolStore();
 
+function makeRequest (method, url) {
+    return new Promise(function (resolve, reject) {
+        var xhr = new XMLHttpRequest();
+        xhr.open(method, url);
+        xhr.onload = function () {
+            if (this.status >= 200 && this.status < 300) {
+                resolve(JSON.parse(xhr.response));
+            } else {
+                reject({
+                    status: this.status,
+                    statusText: xhr.statusText
+                });
+            }
+        };
+        xhr.onerror = function () {
+            reject({
+                status: this.status,
+                statusText: xhr.statusText
+            });
+        };
+        xhr.send();
+    });
+}
+
 function b64EncodeUnicode(str) {
     return btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g,
         function toSolidBytes(match, p1) {
@@ -76,64 +100,65 @@ function validate() {
     message.innerText = '';
     message.focus();
 
-    var xhr = new XMLHttpRequest();
-    xhr.open('GET', 'https://vast-spire-29018.herokuapp.com/api/keys/1165317513', true);
-    xhr.onreadystatechange = function() {
-        if (xhr.readyState == 4 && xhr.status == 200) {
-            var data = JSON.parse(xhr.responseText);
-
-            // encrypt
-            SESSION_BUILDER.processPreKey({
-                registrationId: data['registration_id'],
-                identityKey: new dcodeIO.ByteBuffer.wrap(b64DecodeUnicode(data['identity_key_pub']), 'binary').toArrayBuffer(),
-                signedPreKey: {
-                    keyId     : data['signed_pre_key_id'],
-                    publicKey : new dcodeIO.ByteBuffer.wrap(b64DecodeUnicode(data['signed_pre_key_pub']), 'binary').toArrayBuffer(),
-                    signature : new dcodeIO.ByteBuffer.wrap(b64DecodeUnicode(data['signed_pre_key_sig']), 'binary').toArrayBuffer()
-                },
-                preKey: {
-                    keyId     : data['pre_key_id'],
-                    publicKey : new dcodeIO.ByteBuffer.wrap(b64DecodeUnicode(data['pre_key_pub']), 'binary').toArrayBuffer()
-                }
-            }).then(function() {
-                // encrypt messages
-                var plaintext = new dcodeIO.ByteBuffer.wrap(b64EncodeUnicode(messageText), 'binary').toArrayBuffer()
-                var sessionCipher = new libsignal.SessionCipher(STORE, RECIPIENT_ADDRESS);
-                return sessionCipher.encrypt(plaintext)
-            }).then(function(ciphertext) {
-                return SESSION_BUILDER.processPreKey({
-                    registrationId: data['registration_id'],
-                    identityKey: new dcodeIO.ByteBuffer.wrap(b64DecodeUnicode(data['identity_key_pub']), 'binary').toArrayBuffer(),
-                    signedPreKey: {
-                        keyId     : data['signed_pre_key_id'],
-                        publicKey : new dcodeIO.ByteBuffer.wrap(b64DecodeUnicode(data['signed_pre_key_pub']), 'binary').toArrayBuffer(),
-                        signature : new dcodeIO.ByteBuffer.wrap(b64DecodeUnicode(data['signed_pre_key_sig']), 'binary').toArrayBuffer()
-                    },
-                    preKey: {
-                        keyId     : data['pre_key_id'],
-                        publicKey : new dcodeIO.ByteBuffer.wrap(b64DecodeUnicode(data['pre_key_pub']), 'binary').toArrayBuffer()
-                    }
-                }).then(function() {
-                    return ciphertext
-                })
-            }).then(function(ciphertext) {
-                // encrypt messages
-                var plaintext = new dcodeIO.ByteBuffer.wrap(b64EncodeUnicode(messageText), 'binary').toArrayBuffer()
-                var sessionCipher = new libsignal.SessionCipher(STORE, RECIPIENT_ADDRESS);
-                return sessionCipher.encrypt(plaintext).then(function(ciphertext2) {
-                    return [ciphertext, ciphertext2]
-                })
-            }).then(function(results) {
-                console.log(b64EncodeUnicode(results[0].body))
-                console.log(b64EncodeUnicode(results[1].body))
-                // ciphertext -> { type: <Number>, body: <string> }
-                chrome.tabs.query({currentWindow: true, active: true}, function(tabArray) {
-                    chrome.tabs.sendMessage(tabArray[0].id, { action: "sendMessage", message: '__:' + b64EncodeUnicode(results[0].body) + ':' + b64EncodeUnicode(results[1].body) + ':__'});
-                });
-            }).catch(function onerror(error) {
-                console.error(error);
-            });
-        }
-    }
-    xhr.send(null);
+    makeRequest('GET', 'https://vast-spire-29018.herokuapp.com/api/keys/1165317513').then(function (data) {
+        return makeRequest('GET', 'https://vast-spire-29018.herokuapp.com/api/keys/1165317513').then(function (data2) {
+            return [data, data2]
+        })
+    }).then(function (results) {
+        return SESSION_BUILDER.processPreKey({
+            registrationId: results[0]['registration_id'],
+            identityKey: new dcodeIO.ByteBuffer.wrap(b64DecodeUnicode(results[0]['identity_key_pub']), 'binary').toArrayBuffer(),
+            signedPreKey: {
+                keyId     : results[0]['signed_pre_key_id'],
+                publicKey : new dcodeIO.ByteBuffer.wrap(b64DecodeUnicode(results[0]['signed_pre_key_pub']), 'binary').toArrayBuffer(),
+                signature : new dcodeIO.ByteBuffer.wrap(b64DecodeUnicode(results[0]['signed_pre_key_sig']), 'binary').toArrayBuffer()
+            },
+            preKey: {
+                keyId     : results[0]['pre_key_id'],
+                publicKey : new dcodeIO.ByteBuffer.wrap(b64DecodeUnicode(results[0]['pre_key_pub']), 'binary').toArrayBuffer()
+            }
+        }).then(function() {
+            return results[1]
+        })
+    }).then(function(result) {
+        // encrypt messages
+        var plaintext = new dcodeIO.ByteBuffer.wrap(b64EncodeUnicode(messageText), 'binary').toArrayBuffer()
+        var sessionCipher = new libsignal.SessionCipher(STORE, RECIPIENT_ADDRESS);
+        return sessionCipher.encrypt(plaintext).then(function(ciphertext) {
+            return [ciphertext, result]
+        })
+    }).then(function(results) {
+        console.log(results)
+        return SESSION_BUILDER.processPreKey({
+            registrationId: results[1]['registration_id'],
+            identityKey: new dcodeIO.ByteBuffer.wrap(b64DecodeUnicode(results[1]['identity_key_pub']), 'binary').toArrayBuffer(),
+            signedPreKey: {
+                keyId     : results[1]['signed_pre_key_id'],
+                publicKey : new dcodeIO.ByteBuffer.wrap(b64DecodeUnicode(results[1]['signed_pre_key_pub']), 'binary').toArrayBuffer(),
+                signature : new dcodeIO.ByteBuffer.wrap(b64DecodeUnicode(results[1]['signed_pre_key_sig']), 'binary').toArrayBuffer()
+            },
+            preKey: {
+                keyId     : results[1]['pre_key_id'],
+                publicKey : new dcodeIO.ByteBuffer.wrap(b64DecodeUnicode(results[1]['pre_key_pub']), 'binary').toArrayBuffer()
+            }
+        }).then(function() {
+            return results[0]
+        })
+    }).then(function(ciphertext) {
+        // encrypt messages
+        var plaintext = new dcodeIO.ByteBuffer.wrap(b64EncodeUnicode(messageText), 'binary').toArrayBuffer()
+        var sessionCipher = new libsignal.SessionCipher(STORE, RECIPIENT_ADDRESS);
+        return sessionCipher.encrypt(plaintext).then(function(ciphertext2) {
+            return [ciphertext, ciphertext2]
+        })
+    }).then(function(results) {
+        console.log(b64EncodeUnicode(results[0].body))
+        console.log(b64EncodeUnicode(results[1].body))
+        // ciphertext -> { type: <Number>, body: <string> }
+        chrome.tabs.query({currentWindow: true, active: true}, function(tabArray) {
+            chrome.tabs.sendMessage(tabArray[0].id, { action: "sendMessage", message: '__:' + b64EncodeUnicode(results[0].body) + ':' + b64EncodeUnicode(results[1].body) + ':__'});
+        });
+    }).catch(function(error) {
+        console.error(error);
+    });
 }
