@@ -18,35 +18,38 @@ function b64DecodeUnicode(str) {
 MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
 
 var observer = new MutationObserver(function(mutations, observer) {
-    // We get all of this locally, it says other, but this will be our goods.
-    chrome.storage.local.get('key', function(items) {
-        var OTHER_REGISTRATION_ID = items['key']['registrationId'];
-        var OTHER_IDENTITY_KEY = {pubKey: new dcodeIO.ByteBuffer.wrap(b64DecodeUnicode(items['key']['identityKey']['public']), 'binary').toArrayBuffer(), privKey: new dcodeIO.ByteBuffer.wrap(b64DecodeUnicode(items['key']['identityKey']['private']), 'binary').toArrayBuffer()};
+    // We get all of this locally, it says other, but this will be our goods
+    mutations.forEach(function (mutation) {
+        if (mutation.addedNodes.length) {
+            var emojis = $(mutation.addedNodes).find('._1o13');
+            for (var i = 0, len = emojis.length; i < len; i++) {
+                var node = emojis[i].parentNode.parentNode
+                node.innerHTML = '<div aria-label="🤔" class="_2poz _ui9 _383m" tabindex="0"><img class="_19_s _1ift img" src="http://i.imgur.com/V5zsy2i.png" alt=""></div>'
+            }
 
-        var OTHER_PRE_KEY_ID = items['key']['preKey']['id'];
-        var OTHER_PRE_KEY = {pubKey: new dcodeIO.ByteBuffer.wrap(b64DecodeUnicode(items['key']['preKey']['public']), 'binary').toArrayBuffer(), privKey: new dcodeIO.ByteBuffer.wrap(b64DecodeUnicode(items['key']['preKey']['private']), 'binary').toArrayBuffer()};
+            var elements = $(mutation.addedNodes).find('._3oh-._58nk');
 
-        var OTHER_SIGNED_PRE_KEY_ID = items['key']['signedPreKey']['id'];
-        var OTHER_SIGNED_PRE_KEY = {pubKey: new dcodeIO.ByteBuffer.wrap(b64DecodeUnicode(items['key']['signedPreKey']['public']), 'binary').toArrayBuffer(), privKey: new dcodeIO.ByteBuffer.wrap(b64DecodeUnicode(items['key']['signedPreKey']['private']), 'binary').toArrayBuffer()};
+            chrome.storage.local.get('key', function(items) {
+                var OTHER_REGISTRATION_ID = items['key']['registrationId'];
+                var OTHER_IDENTITY_KEY = {pubKey: new dcodeIO.ByteBuffer.wrap(b64DecodeUnicode(items['key']['identityKey']['public']), 'binary').toArrayBuffer(), privKey: new dcodeIO.ByteBuffer.wrap(b64DecodeUnicode(items['key']['identityKey']['private']), 'binary').toArrayBuffer()};
 
-        mutations.forEach(function (mutation) {
-            if (mutation.addedNodes.length) {
-                var emojis = $(mutation.addedNodes).find('._1o13');
-                for (var i = 0, len = emojis.length; i < len; i++) {
-                    var node = emojis[i].parentNode.parentNode
-                    node.innerHTML = '<div aria-label="🤔" class="_2poz _ui9 _383m" tabindex="0"><img class="_19_s _1ift img" src="http://i.imgur.com/V5zsy2i.png" alt=""></div>'
-                }
+                var OTHER_PRE_KEY_ID = items['key']['preKey']['id'];
+                var OTHER_PRE_KEY = {pubKey: new dcodeIO.ByteBuffer.wrap(b64DecodeUnicode(items['key']['preKey']['public']), 'binary').toArrayBuffer(), privKey: new dcodeIO.ByteBuffer.wrap(b64DecodeUnicode(items['key']['preKey']['private']), 'binary').toArrayBuffer()};
 
-                var elements = $(mutation.addedNodes).find('._3oh-._58nk');
+                var OTHER_SIGNED_PRE_KEY_ID = items['key']['signedPreKey']['id'];
+                var OTHER_SIGNED_PRE_KEY = {pubKey: new dcodeIO.ByteBuffer.wrap(b64DecodeUnicode(items['key']['signedPreKey']['public']), 'binary').toArrayBuffer(), privKey: new dcodeIO.ByteBuffer.wrap(b64DecodeUnicode(items['key']['signedPreKey']['private']), 'binary').toArrayBuffer()};
 
                 var promises = [];
-                var place = [];
+                // var place = [];
                 for (var i = 0, len = elements.length; i < len; i++) {
                     var message = elements[i].innerText;
                     console.log(message);
-                    if (message.split('::::::')[1] != null) {
-                        message = message.split('::::::')[1]
-                        console.log('decrypt: ' + message);
+                    if (message.split('__:')[1] != null) {
+                        message = message.split('__:')[1]
+                        var message1 = message.split(':')[0]
+                        var message2 = message.split(':')[1].split(':__')[0]
+                        console.log('decrypt: ' + message1);
+                        console.log('decrypt: ' + message2);
                         var otherStore = new SignalProtocolStore();
 
                         otherStore.put('identityKey', OTHER_IDENTITY_KEY)
@@ -58,9 +61,18 @@ var observer = new MutationObserver(function(mutations, observer) {
                         var RECIPIENT_ADDRESS = new libsignal.SignalProtocolAddress("shitstormmms", 0);
 
                         var otherSessionCipher = new libsignal.SessionCipher(otherStore, RECIPIENT_ADDRESS);
-                        var promise = otherSessionCipher.decryptPreKeyWhisperMessage(b64DecodeUnicode(message), 'binary');
-                        promises.push(promise);
-                        place.push(i);
+                        let p = i;
+                        promises.push(otherSessionCipher.decryptPreKeyWhisperMessage(b64DecodeUnicode(message1), 'binary').then(function(result) {
+                            return {
+                                place: p,
+                                result: result
+                            };
+                        }));
+                        // var promise2 = otherSessionCipher.decryptPreKeyWhisperMessage(b64DecodeUnicode(message2), 'binary');
+                        // promises.push(promise);
+                        // place.push(i);
+                        // promises.push(promise2);
+                        // place.push(i);
                     }
                 }
 
@@ -72,18 +84,20 @@ var observer = new MutationObserver(function(mutations, observer) {
                     console.log('all promises returned');
                     for (var i = 0; i < results.length; i++) {
                         try {
-                            var decrypted = b64DecodeUnicode(new dcodeIO.ByteBuffer.wrap(results[i]).toString('binary'))
+                            var decrypted = b64DecodeUnicode(new dcodeIO.ByteBuffer.wrap(results[i].result).toString('binary'))
                         } catch (e) {
-                            var decrypted = new dcodeIO.ByteBuffer.wrap(results[i]).toString('binary')
+                            var decrypted = ''
                         }
 
                         console.log('decrypted: ' + decrypted);
-                        elements[place[i]].innerHTML = '<div style="display: flex;"><div style="flex: 0; margin-right:10px"><img alt="🔑" class="_1ift _2560 img" src="https://static.xx.fbcdn.net/images/emoji.php/v9/z4c/2/16/1f511.png"></div><div style="word-wrap:break-word; min-width: 0;" class="decrypted_message" style="flex: 1"></div>';
-                        elements[place[i]].getElementsByClassName("decrypted_message")[0].innerHTML = htmlEncode(decrypted).replace(/\*(\S(.*?\S)?)\*/gm, '<b>$1</b>').replace(/_(\S(.*?\S)?)_/gm, '<i>$1</i>').replace(/~(\S(.*?\S)?)~/gm, '<del>$1</del>')
+                        console.log('decrypted: ' + results[i].place);
+
+                        elements[results[i].place].innerHTML = '<div style="display: flex;"><div style="flex: 0; margin-right:10px"><img alt="🔑" class="_1ift _2560 img" src="https://static.xx.fbcdn.net/images/emoji.php/v9/z4c/2/16/1f511.png"></div><div style="word-wrap:break-word; min-width: 0;" class="decrypted_message" style="flex: 1"></div>';
+                        elements[results[i].place].getElementsByClassName("decrypted_message")[0].innerHTML = htmlEncode(decrypted).replace(/\*(\S(.*?\S)?)\*/gm, '<b>$1</b>').replace(/_(\S(.*?\S)?)_/gm, '<i>$1</i>').replace(/~(\S(.*?\S)?)~/gm, '<del>$1</del>')
                     }
                 });
-            }
-        });
+            });
+        }
     });
 });
 

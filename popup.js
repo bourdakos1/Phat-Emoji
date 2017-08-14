@@ -77,7 +77,7 @@ function validate() {
     message.focus();
 
     var xhr = new XMLHttpRequest();
-    xhr.open('GET', 'https://vast-spire-29018.herokuapp.com/api/keys/1819543328', true);
+    xhr.open('GET', 'https://vast-spire-29018.herokuapp.com/api/keys/1165317513', true);
     xhr.onreadystatechange = function() {
         if (xhr.readyState == 4 && xhr.status == 200) {
             var data = JSON.parse(xhr.responseText);
@@ -104,7 +104,7 @@ function validate() {
                 sessionCipher.encrypt(plaintext).then(function(ciphertext) {
                     // ciphertext -> { type: <Number>, body: <string> }
                     chrome.tabs.query({currentWindow: true, active: true}, function(tabArray) {
-                        chrome.tabs.sendMessage(tabArray[0].id, { action: "sendMessage", message: '::::::' + b64EncodeUnicode(ciphertext.body) });
+                        chrome.tabs.sendMessage(tabArray[0].id, { action: "sendMessage", message: '__:' + b64EncodeUnicode(ciphertext.body) + ':' + 'xxx' + ':__'});
                     });
                 });
             });
