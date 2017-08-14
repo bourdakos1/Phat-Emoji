@@ -99,3 +99,15 @@ document.addEventListener('DOMContentLoaded', () => {
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     window.postMessage(message, '*');
 });
+
+window.addEventListener('message', event => {
+    if (event.source !== window || event.data.action == null || event.data.action != 'sendId') {
+        return;
+    }
+
+    chrome.runtime.sendMessage(null, {
+        action: event.data.action,
+        otherUser: event.data.otherUser,
+        user: event.data.user
+    });
+}, false);

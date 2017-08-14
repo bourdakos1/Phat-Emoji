@@ -58,7 +58,25 @@ loopy = function(node) {
 }
 
 window.addEventListener('message', event => {
-    if (event.source !== window || event.data.action == null) {
+    if (event.source !== window || event.data.action == null || event.data.action != 'getId') {
+        return;
+    }
+    console.log('gettngid')
+    let node = document.body;
+    let otherUser = loopy(node).split(':')[1];
+    var user = document.getElementsByTagName("script")[4].innerText.match( /{"USER_ID":"(.*?)"/ )[1];
+
+    var message = {
+        action: 'sendId',
+        otherUser: otherUser,
+        user: user
+    }
+
+    window.postMessage(message, '*');
+}, false);
+
+window.addEventListener('message', event => {
+    if (event.source !== window || event.data.action == null || event.data.action != 'sendMessage') {
         return;
     }
 
