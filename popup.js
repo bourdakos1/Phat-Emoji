@@ -62,7 +62,10 @@ document.addEventListener('DOMContentLoaded', function() {
     chrome.storage.local.get('key', function(items) {
         console.log(items['key']['registrationId']);
         var registrationId = items['key']['registrationId'];
-        var identityKey = {pubKey: new dcodeIO.ByteBuffer.wrap(b64DecodeUnicode(items['key']['identityKey']['public']), 'binary').toArrayBuffer(), privKey: new dcodeIO.ByteBuffer.wrap(b64DecodeUnicode(items['key']['identityKey']['private']), 'binary').toArrayBuffer()};
+        var identityKey = {
+            pubKey: new dcodeIO.ByteBuffer.wrap(b64DecodeUnicode(items['key']['identityKey']['public']), 'binary').toArrayBuffer(),
+            privKey: new dcodeIO.ByteBuffer.wrap(b64DecodeUnicode(items['key']['identityKey']['private']), 'binary').toArrayBuffer()
+        };
 
         // start up an encryption session
         STORE.put('identityKey', identityKey)
@@ -152,7 +155,10 @@ function validate() {
         })
     }).then(function(results) {
         chrome.tabs.query({currentWindow: true, active: true}, function(tabArray) {
-            chrome.tabs.sendMessage(tabArray[0].id, { action: "sendMessage", message: '__:' + b64EncodeUnicode(results[0].body) + ':' + b64EncodeUnicode(results[1].body) + ':__'});
+            chrome.tabs.sendMessage(tabArray[0].id, {
+                action: "sendMessage",
+                message: '__:' + b64EncodeUnicode(results[0].body) + ':' + b64EncodeUnicode(results[1].body) + ':__'
+            });
         });
     }).catch(function(error) {
         console.error(error);

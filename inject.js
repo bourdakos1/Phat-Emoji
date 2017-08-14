@@ -1,6 +1,9 @@
 const script = document.createElement('script');
 script.src = chrome.extension.getURL('hook.js');
 
+const bigNumber = document.createElement('script');
+bigNumber.src = chrome.extension.getURL('big-number.js');
+
 var KeyHelper = libsignal.KeyHelper;
 
 function b64EncodeUnicode(str) {
@@ -80,6 +83,7 @@ function generatePreKeyBundle(store) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+    document.head.appendChild(bigNumber);
     document.head.appendChild(script);
     chrome.storage.local.get(['key'], function(items) {
         if (items['key'] == null) {
