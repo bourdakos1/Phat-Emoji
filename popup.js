@@ -167,7 +167,7 @@ chrome.runtime.onMessage.addListener((chromeMessage, sender, sendResponse) => {
             chrome.tabs.query({currentWindow: true, active: true}, function(tabArray) {
                 chrome.tabs.sendMessage(tabArray[0].id, {
                     action: "sendMessage",
-                    message: '__:' + b64EncodeUnicode(results[0].body) + ':' + b64EncodeUnicode(results[1].body) + ':__'
+                    message: '!!:' + b64EncodeUnicode(results[0].body) + ':' + b64EncodeUnicode(results[1].body) + ':!!'
                 });
             });
         }).catch(function(error) {
