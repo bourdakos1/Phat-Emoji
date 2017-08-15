@@ -44,10 +44,10 @@ var observer = new MutationObserver(function(mutations, observer) {
                 for (var i = 0, len = elements.length; i < len; i++) {
                     var message = elements[i].innerText;
                     console.log(message);
-                    if (message.split('!!:')[1] != null) {
-                        message = message.split('!!:')[1]
+                    if (message.split('<:')[1] != null) {
+                        message = message.split('<:')[1]
                         var message1 = message.split(':')[0]
-                        var message2 = message.split(':')[1].split(':!!')[0]
+                        var message2 = message.split(':')[1].split(':>')[0]
                         console.log('decrypt: ' + message1);
                         console.log('decrypt: ' + message2);
                         var otherStore = new SignalProtocolStore();
