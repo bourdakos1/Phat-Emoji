@@ -76,7 +76,7 @@ window.addEventListener('message', event => {
 }, false);
 
 window.addEventListener('message', event => {
-    if (event.source !== window || event.data.action == null || event.data.action != 'sendMessage') {
+    if (event.source !== window || event.data.action == null || (event.data.action != 'sendMessage' && event.data.action != 'sendHotEmoji')) {
         return;
     }
 
