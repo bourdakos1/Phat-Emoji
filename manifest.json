@@ -2,8 +2,8 @@
     "manifest_version": 2,
 
     "name": "Phat Emoji",
-    "description": "Send end to end encrypted messages",
-    "version": "0.0.1",
+    "description": "Send end-to-end encrypted messages.",
+    "version": "0.0.2",
 
     "icons": {
         "16": "icon16.png",
