@@ -111,3 +111,14 @@ window.addEventListener('message', event => {
         user: event.data.user
     });
 }, false);
+
+window.addEventListener('message', event => {
+    if (event.source !== window || event.data.action == null || event.data.action != 'nonUser') {
+        return;
+    }
+
+    chrome.runtime.sendMessage(null, {
+        action: event.data.action,
+        otherUser: event.data.otherUser
+    });
+}, false);

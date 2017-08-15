@@ -56,6 +56,12 @@ function handlePaste (e) {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
+    chrome.tabs.query({currentWindow: true, active: true}, function(tabArray) {
+        chrome.tabs.sendMessage(tabArray[0].id, {
+            action: 'checkIsExtensionUser'
+        });
+    });
+
     document.getElementById('message').addEventListener('paste', handlePaste);
 
     // should be fine to do this, can't possibly take that long...
@@ -86,9 +92,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     document.getElementById('send_emoji').addEventListener('click', function() {
-        var message = document.getElementById('message');
-        var messageText = message.innerText
-
         chrome.tabs.query({currentWindow: true, active: true}, function(tabArray) {
             chrome.tabs.sendMessage(tabArray[0].id, { action: "sendHotEmoji" });
         });
@@ -105,7 +108,27 @@ function validate() {
 }
 
 chrome.runtime.onMessage.addListener((chromeMessage, sender, sendResponse) => {
-    if (chromeMessage.action == 'sendId') {
+    if (chromeMessage.action == 'nonUser') {
+        console.log(chromeMessage.otherUser);
+        makeRequest('GET', 'https://vast-spire-29018.herokuapp.com/api/keys/' + chromeMessage.otherUser).then(function(data) {
+            // Do nothing...
+        }).catch(function() {
+            // Show invite UI.
+            document.body.innerHTML = '\
+                <div class="box">\
+                    <div style="text-align: center;" class="text-box" id="message">This user doesn\'t have Phat Emoji. <a href="#" id="invite">Invite them!</a></div>\
+                <div>';
+            document.getElementById('invite').addEventListener('click', function() {
+                chrome.tabs.query({currentWindow: true, active: true}, function(tabArray) {
+                    chrome.tabs.sendMessage(tabArray[0].id, {
+                        action: "sendMessage",
+                        message: 'Get Phat Emoji so we can send secret messages!\n\nhttps://chrome.google.com/webstore/detail/phat-emoji/ognoiiipkkmdmihiinbpdfjbfncekbhj?hl=en-US',
+                        attach: true
+                    });
+                });
+            });
+        })
+    } else if (chromeMessage.action == 'sendId') {
         console.log(chromeMessage)
         var message = document.getElementById('message');
         var messageText = message.innerText
