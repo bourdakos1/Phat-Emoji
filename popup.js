@@ -122,8 +122,7 @@ chrome.runtime.onMessage.addListener((chromeMessage, sender, sendResponse) => {
                 chrome.tabs.query({currentWindow: true, active: true}, function(tabArray) {
                     chrome.tabs.sendMessage(tabArray[0].id, {
                         action: "sendMessage",
-                        message: 'Get Phat Emoji so we can send secret messages!\n\nhttps://chrome.google.com/webstore/detail/phat-emoji/ognoiiipkkmdmihiinbpdfjbfncekbhj?hl=en-US',
-                        attach: true
+                        message: 'Get Phat Emoji so we can send secret messages!\n\nhttps://chrome.google.com/webstore/detail/phat-emoji/ognoiiipkkmdmihiinbpdfjbfncekbhj?hl=en-US'
                     });
                 });
             });
