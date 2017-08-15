@@ -58,15 +58,19 @@ var observer = new MutationObserver(function(mutations, observer) {
                         otherStore.storePreKey(OTHER_PRE_KEY_ID, OTHER_PRE_KEY);
                         otherStore.storeSignedPreKey(OTHER_SIGNED_PRE_KEY_ID, OTHER_SIGNED_PRE_KEY);
 
-                        var RECIPIENT_ADDRESS = new libsignal.SignalProtocolAddress("shitstormmms", 0);
+                        var RECIPIENT_ADDRESS = new libsignal.SignalProtocolAddress("recipients_perminent_fb_id", 0);
+                        var MY_ADDRESS = new libsignal.SignalProtocolAddress("my_perminent_fb_id", 0);
+
+                        var mySessionCipher = new libsignal.SessionCipher(otherStore, MY_ADDRESS);
 
                         var otherSessionCipher = new libsignal.SessionCipher(otherStore, RECIPIENT_ADDRESS);
+
                         let p = i;
 
                         try {
                             var decodedMes1 = b64DecodeUnicode(message1);
 
-                            otherSessionCipher.decryptPreKeyWhisperMessage(decodedMes1, 'binary').then(function(result) {
+                            mySessionCipher.decryptPreKeyWhisperMessage(decodedMes1, 'binary').then(function(result) {
                                 return {
                                     place: p,
                                     result: result
