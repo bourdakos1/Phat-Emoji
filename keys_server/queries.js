@@ -33,11 +33,14 @@ function getKey(req, res, next) {
 }
 
 function createKey(req, res, next) {
+    console.log(req.body);
+    console.log(req.query.id);
+    console.log(req.body.registration_id);
     db.none('insert into keys (ID, registration_id, identity_key_pub, \
         signed_pre_key_id, signed_pre_key_pub, signed_pre_key_sig, \
         pre_key_id, pre_key_pub)' +
         'values($1, $2, $3, $4, $5, $6, $7, $8)', [
-            parseInt(req.params.id),
+            parseInt(req.query.id),
             parseInt(req.body.registration_id),
             req.body.identity_key_pub,
             parseInt(req.body.signed_pre_key_id),
@@ -51,7 +54,25 @@ function createKey(req, res, next) {
         .json({});
     })
     .catch(function (err) {
-        return next(err);
+        db.none('update keys set registration_id=$2, identity_key_pub=$3, \
+        signed_pre_key_id=$4, signed_pre_key_pub=$5, signed_pre_key_sig=$6, \
+        pre_key_id=$7, pre_key_pub=$8 where ID=$1', [
+            parseInt(req.query.id),
+            parseInt(req.body.registration_id),
+            req.body.identity_key_pub,
+            parseInt(req.body.signed_pre_key_id),
+            req.body.signed_pre_key_pub,
+            req.body.signed_pre_key_sig,
+            parseInt(req.body.pre_key_id),
+            req.body.pre_key_pub
+        ])
+        .then(function () {
+            res.status(200)
+            .json({});
+        })
+        .catch(function (err) {
+            return next(err);
+        });
     });
 }
 
