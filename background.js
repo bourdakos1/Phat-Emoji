@@ -1,25 +1,14 @@
 chrome.runtime.onInstalled.addListener(() => {
-    chrome.declarativeContent.onPageChanged.removeRules(undefined, () => {
-        chrome.declarativeContent.onPageChanged.addRules([
-            {
-                conditions: [
-                    new chrome.declarativeContent.PageStateMatcher({
-                        pageUrl: {
-                            hostContains: 'facebook'
-                        }
-                    }),
-                    new chrome.declarativeContent.PageStateMatcher({
-                        pageUrl: {
-                            hostContains: 'messenger'
-                        }
-                    })
-                ],
-                actions: [
-                    new chrome.declarativeContent.RequestContentScript({
-                        js: ['libsignal-protocol.js', 'InMemorySignalProtocolStore.js', 'inject.js']
-                    })
-                ]
+    chrome.tabs.onHighlighted.addListener(function() {
+        chrome.tabs.query({currentWindow: true, active: true}, function(tabs) {
+            if (tabs[0].url) {
+                chrome.tabs.executeScript(null, {file: 'jquery.min.js'});
+                chrome.tabs.executeScript(null, {file: 'decrypt.js'});
+
+                chrome.tabs.executeScript(null, {file: 'libsignal-protocol.js'});
+                chrome.tabs.executeScript(null, {file: 'InMemorySignalProtocolStore.js'});
+                chrome.tabs.executeScript(null, {file: 'inject.js'});
             }
-        ]);
+        });
     });
 });

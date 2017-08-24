@@ -1,9 +1,3 @@
-const script = document.createElement('script');
-script.src = chrome.extension.getURL('hook.js');
-
-const bigNumber = document.createElement('script');
-bigNumber.src = chrome.extension.getURL('big-number.js');
-
 var KeyHelper = libsignal.KeyHelper;
 
 function b64EncodeUnicode(str) {
@@ -82,9 +76,20 @@ function generatePreKeyBundle(store) {
     });
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-    document.head.appendChild(bigNumber);
-    document.head.appendChild(script);
+const script = document.createElement('script');
+script.src = chrome.extension.getURL('hook.js');
+script.id = 'encrypt-emoji-hook';
+
+const bigNumber = document.createElement('script');
+bigNumber.src = chrome.extension.getURL('big-number.js');
+
+function injectKeyCreator() {
+    console.log(document.getElementById('encrypt-emoji-hook'));
+    if (document.getElementById('encrypt-emoji-hook') == null) {
+        document.head.appendChild(script);
+        document.head.appendChild(bigNumber);
+    }
+
     chrome.storage.local.get(['key'], function(items) {
         if (items['key'] == null) {
             var store = new SignalProtocolStore();
@@ -93,7 +98,20 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
     });
-});
+}
+
+// This script gets called when the page is opened, so DOMContentLoaded isn't
+// guarenteed to be triggered.
+
+// if head has been already instantianted then the page was just opened. so just
+// add the scripts now. If not, add a listener to wait for the head to be ready.
+if (document.head != null) {
+    injectKeyCreator();
+} else {
+    document.addEventListener('DOMContentLoaded', () => {
+        injectKeyCreator();
+    });
+}
 
 // Pass on any chrome runtime messages to the window.
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {

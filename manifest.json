@@ -21,7 +21,8 @@
                 "libsignal-protocol.js",
                 "InMemorySignalProtocolStore.js",
                 "jquery.min.js",
-                "decrypt.js"
+                "decrypt.js",
+                "inject.js"
             ],
             "run_at": "document_end"
         }
