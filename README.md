@@ -1,1 +1,3 @@
-# Phat-Emoji
+# Phat Emoji
+
+![](screenshots/photo.png)
