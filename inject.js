@@ -59,19 +59,11 @@ function generatePreKeyBundle(store) {
         console.log(userId)
 
         chrome.storage.local.set({'key': key}, function() {
-            var xhr = new XMLHttpRequest();
-            xhr.open('POST', 'https://vast-spire-29018.herokuapp.com/api/keys?id=' + userId, true);
-            xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
-            var body = {
-                'registration_id': key['registrationId'],
-                'identity_key_pub': key['identityKey']['public'],
-                'pre_key_id': key['preKey']['id'],
-                'pre_key_pub': key['preKey']['public'],
-                'signed_pre_key_id': key['signedPreKey']['id'],
-                'signed_pre_key_pub': key['signedPreKey']['public'],
-                'signed_pre_key_sig': key['signedPreKey']['secret']
-            }
-            xhr.send(JSON.stringify(body))
+            chrome.runtime.sendMessage(null, {
+                action: 'uploadPublicKeys',
+                userId: userId,
+                key: key
+            });
         })
     });
 }

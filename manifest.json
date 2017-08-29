@@ -3,7 +3,7 @@
 
     "name": "Phat Emoji",
     "description": "Send end-to-end encrypted messages.",
-    "version": "0.0.3",
+    "version": "0.0.4",
 
     "icons": {
         "16": "icon16.png",
@@ -47,6 +47,7 @@
         "declarativeContent",
         "activeTab",
         "storage",
+        "cookies",
         "*://*.messenger.com/",
         "*://*.facebook.com/*",
         "*://vast-spire-29018.herokuapp.com/api/keys/*"
