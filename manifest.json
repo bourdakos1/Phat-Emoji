@@ -47,6 +47,7 @@
         "declarativeContent",
         "activeTab",
         "storage",
+        "cookies",
         "*://*.messenger.com/",
         "*://*.facebook.com/*",
         "*://vast-spire-29018.herokuapp.com/api/keys/*"
